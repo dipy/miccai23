@@ -22,6 +22,7 @@ dependencies = [
   "dipy>=1.7.0",
   "click>=8.0.1",
   "requests>=2.26.0",
+  "bs4",
   ]
 dynamic = ["version"]
 
