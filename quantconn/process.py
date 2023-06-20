@@ -76,6 +76,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     # TODO:  Get White matter mask
     # download The-HCP-MMP1.0-atlas-in-FSL https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL
     # https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/blob/master/MNI_Glasser_HCP_v1.0.nii.gz
+    # create a Get function for the downloaded atlas
     # register T1 whith this atlas
     # visualize white matter index in this atlas
     # get white matter mask
@@ -101,21 +102,21 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     save_trk(sft, pjoin(output_path, "full_tractogram.trk"), streamlines)
 
     # recobunble
-    moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
-    atlas, target, x0='affine', verbose=True, progressive=True,
-    rng=np.random.RandomState(1984))
+    # moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
+    # atlas, target, x0='affine', verbose=True, progressive=True,
+    # rng=np.random.RandomState(1984))
 
-    np.save("slr_transform.npy", transform)
+    # np.save("slr_transform.npy", transform)
 
-    rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2001))
+    # rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2001))
 
-    recognized_af_l, af_l_labels = rb.recognize(model_bundle=model_af_l,
-                                                model_clust_thr=0.1,
-                                                reduction_thr=15,
-                                                pruning_thr=7,
-                                                reduction_distance='mdf',
-                                                pruning_distance='mdf',
-                                                slr=True)
+    # recognized_af_l, af_l_labels = rb.recognize(model_bundle=model_af_l,
+    #                                             model_clust_thr=0.1,
+    #                                             reduction_thr=15,
+    #                                             pruning_thr=7,
+    #                                             reduction_distance='mdf',
+    #                                             pruning_distance='mdf',
+    #                                             slr=True)
     # save the recognize bundle
 
 
