@@ -13,19 +13,23 @@ from dipy.data import (fetch_target_tractogram_hcp,
 from quantconn.constants import ts1_subjects, miccai23_home
 
 HCP_MMP_1_0_URL = \
-    "https://raw.githubusercontent.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/blob/master/"
-
+    "https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/raw/master/"
 
 fetch_hcp_mmp_1_0_atlas = _make_fetcher(
-    "fetch_viz_wiki_nw",
+    "fetch_hcp_mmp_1_0_atlas",
     miccai23_home,
     HCP_MMP_1_0_URL,
     ['MNI_Glasser_HCP_v1.0.nii.gz'],
     ['MNI_Glasser_HCP_v1.0.nii.gz'],
-    [''],
+    ['2f2b41899322a0cccc92df84e4939353'],
     doc="Download the following ",
     msg=("You can find more information about this dataset")
     )
+
+# Build fetcher for
+# https://figshare.com/articles/dataset/Atlas_of_30_Human_Brain_Bundles_in_MNI_space/12089652
+# https://figshare.com/ndownloader/files/26842853
+
 
 
 def download_folder(public_folder_link, destination_dir):
@@ -155,7 +159,7 @@ def download_folder_2(public_folder_url, destination_dir):
 def download_data():
     target_file, target_folder = fetch_target_tractogram_hcp()
     atlas_file, atlas_folder = fetch_bundle_atlas_hcp842()
-    # fetch_hcp_mmp_1_0_atlas()
+    fetch_hcp_mmp_1_0_atlas()
 
 
 # @click.command()
