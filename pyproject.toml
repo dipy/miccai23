@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
   "dipy>=1.7.0",
-  "click>=8.0.1",
+  "typer>=0.9.0",
   "requests>=2.26.0",
   "bs4",
   ]
@@ -30,7 +30,7 @@ dynamic = ["version"]
 "Homepage" = "https://github.com/dipy/miccai23"
 
 [project.scripts]
-quantconn = "quantconn.cli:main"
+quantconn = "quantconn.cli:app"
 
 [tool.hatch.version]
 source = "vcs"

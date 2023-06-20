@@ -3,8 +3,12 @@ from os.path import join as pjoin
 import requests
 
 from bs4 import BeautifulSoup
-import click
 from dipy.data.fetcher import _make_fetcher
+from dipy.data import get_two_hcp842_bundles
+from dipy.data import (fetch_target_tractogram_hcp,
+                       fetch_bundle_atlas_hcp842,
+                       get_bundle_atlas_hcp842,
+                       get_target_tractogram_hcp)
 
 from quantconn.constants import ts1_subjects, miccai23_home
 
@@ -131,6 +135,14 @@ def download_folder_2(public_folder_url, destination_dir):
         print("Failed to retrieve public folder contents.")
 
     print("Folder download complete.")
+
+
+def download_data():
+    target_file, target_folder = fetch_target_tractogram_hcp()
+    atlas_file, atlas_folder = fetch_bundle_atlas_hcp842()
+
+    atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
+    target_file = get_target_tractogram_hcp()
 
 
 @click.command()
