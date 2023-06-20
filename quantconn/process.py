@@ -2,6 +2,7 @@ from os.path import join as pjoin
 
 import numpy as np
 
+from dipy.align.streamlinear import whole_brain_slr
 from dipy.core.gradients import gradient_table
 from dipy.io.gradients import read_bvals_bvecs
 from dipy.io.image import load_nifti, save_nifti
@@ -20,6 +21,7 @@ from dipy.io.streamline import save_trk
 from dipy.tracking.local_tracking import LocalTracking
 from dipy.tracking.streamline import Streamlines
 from dipy.segment.mask import median_otsu
+from dipy.segment.bundles import RecoBundles
 
 
 # Process 1: Bundles/Tractography/BUAN

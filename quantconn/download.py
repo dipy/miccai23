@@ -12,6 +12,10 @@ from dipy.data import (fetch_target_tractogram_hcp,
 
 from quantconn.constants import ts1_subjects, miccai23_home
 
+HCP_MMP1.0 = \
+    "https://raw.githubusercontent.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/blob/master/"
+
+
 
 def download_folder(public_folder_link, destination_dir):
 
@@ -145,13 +149,13 @@ def download_data():
     target_file = get_target_tractogram_hcp()
 
 
-@click.command()
-@click.option('--db', default="training", type=click.Choice(['training', 'testing', 'test_submision1', 'test_submision2'], case_sensitive=False), prompt='Enter data name to download', help='Data to download')
-@click.option('--subject', '-sbj', default=ts1_subjects[:2], type=click.Choice(ts1_subjects, case_sensitive=False), multiple=True, prompt='Enter subject to download', help='Subject to download')
-def download(db, subject):
-    print(f'Deploying current application artifact to {db} environment in cloud...{subject}')
-    link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z/folder/208448607516"
-    # link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z"
-    # link = "https://api.box.com/2.0/folders/208448607516/items"
+# @click.command()
+# @click.option('--db', default="training", type=click.Choice(['training', 'testing', 'test_submision1', 'test_submision2'], case_sensitive=False), prompt='Enter data name to download', help='Data to download')
+# @click.option('--subject', '-sbj', default=ts1_subjects[:2], type=click.Choice(ts1_subjects, case_sensitive=False), multiple=True, prompt='Enter subject to download', help='Subject to download')
+# def download(db, subject):
+#     print(f'Deploying current application artifact to {db} environment in cloud...{subject}')
+#     link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z/folder/208448607516"
+#     # link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z"
+#     # link = "https://api.box.com/2.0/folders/208448607516/items"
 
-    download_folder_2(link, miccai23_home)
+#     download_folder_2(link, miccai23_home)
