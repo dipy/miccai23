@@ -12,9 +12,20 @@ from dipy.data import (fetch_target_tractogram_hcp,
 
 from quantconn.constants import ts1_subjects, miccai23_home
 
-HCP_MMP1.0 = \
+HCP_MMP_1_0_URL = \
     "https://raw.githubusercontent.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/blob/master/"
 
+
+fetch_hcp_mmp_1_0_atlas = _make_fetcher(
+    "fetch_viz_wiki_nw",
+    miccai23_home,
+    HCP_MMP_1_0_URL,
+    ['MNI_Glasser_HCP_v1.0.nii.gz'],
+    ['MNI_Glasser_HCP_v1.0.nii.gz'],
+    [''],
+    doc="Download the following ",
+    msg=("You can find more information about this dataset")
+    )
 
 
 def download_folder(public_folder_link, destination_dir):
@@ -144,9 +155,7 @@ def download_folder_2(public_folder_url, destination_dir):
 def download_data():
     target_file, target_folder = fetch_target_tractogram_hcp()
     atlas_file, atlas_folder = fetch_bundle_atlas_hcp842()
-
-    atlas_file, all_bundles_files = get_bundle_atlas_hcp842()
-    target_file = get_target_tractogram_hcp()
+    # fetch_hcp_mmp_1_0_atlas()
 
 
 # @click.command()
