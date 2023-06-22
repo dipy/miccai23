@@ -5,6 +5,11 @@
 # Use python base image
 FROM python:3.9-slim-bullseye
 
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends git \
+&& apt-get purge -y --auto-remove \
+&& rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONUNBUFFERED True
 
 ARG COMMIT
