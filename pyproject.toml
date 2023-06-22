@@ -32,6 +32,17 @@ dynamic = ["version"]
 [project.scripts]
 quantconn = "quantconn.cli:app"
 
+[project.optional-dependencies]
+all = ["quantconn[style, test, typing]"]
+style = ["flake8", "blue", "isort", "pre-commit"]
+typing = ["mypy", "types-Pillow", "data-science-types"]
+test = [
+    "coverage",
+    "pytest !=5.3.4",
+    "pytest-cov",
+    "pytest-doctestplus",
+    ]
+
 [tool.hatch.version]
 source = "vcs"
 
@@ -46,3 +57,4 @@ packages = ["quantconn"]
 
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
+version_scheme = "release-branch-semver"

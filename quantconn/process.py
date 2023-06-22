@@ -11,7 +11,7 @@ from dipy.io.utils import nifti1_symmat
 from dipy.reconst.dti import (TensorModel, color_fa, fractional_anisotropy,
                               geodesic_anisotropy, mean_diffusivity,
                               axial_diffusivity, radial_diffusivity,
-                              lower_triangular, mode as get_mode)
+                              lower_triangular)
 from dipy.data import default_sphere
 from dipy.direction import peaks_from_model
 from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
