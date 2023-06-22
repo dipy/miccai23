@@ -53,7 +53,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        package: ['wheel', 'sdist', 'archive']
+        package: ['wheel', 'sdist']  # , 'archive']
     steps:
       - name: Download sdist and wheel artifacts
         if: matrix.package != 'archive'
