@@ -58,6 +58,30 @@ fetch_30_bundles_atlas_hcp842 = _make_fetcher(
     )
 
 
+def get_30_bundles_atlas_hcp842():
+    """Get the path of the 30 bundles atlas in MNI space (2009c).
+
+    Returns
+    -------
+    file1 : string
+    file2 : string
+    """
+    atlas = pjoin(miccai23_home,
+                  'Atlas_30_Bundles',
+                  'whole_brain',
+                  'whole_brain_MNI.trk')
+
+    bundles_folder = pjoin(miccai23_home, 'Atlas_30_Bundles', 'bundles')
+    all_bundles_files = {f[:-4]: pjoin(bundles_folder, f)
+                         for f in os.listdir(bundles_folder)
+                         if f.endswith('.trk')}
+
+    if not os.path.exists(atlas):
+        fetch_30_bundles_atlas_hcp842()
+
+    return atlas, all_bundles_files
+
+
 def download_folder(public_folder_link, destination_dir):
 
     # Create the destination directory if it doesn't exist

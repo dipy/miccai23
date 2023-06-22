@@ -113,4 +113,4 @@ def visualize():
 # /Users/skoudoro/data/miccai23/Training
 # /Users/skoudoro/data/miccai23/results
 
-# quantconn process -db /Users/skoudoro/data/miccai23/Training -outp /Users/skoudoro/data/miccai23/result -sbj sub-8887801 -sbj sub-8623601
+# quantconn process -db /Users/skoudoro/data/miccai23/Training -dest /Users/skoudoro/data/miccai23/result -sbj sub-8887801 -ff

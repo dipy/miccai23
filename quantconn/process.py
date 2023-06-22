@@ -7,7 +7,7 @@ from dipy.core.gradients import gradient_table
 from dipy.io.gradients import read_bvals_bvecs
 from dipy.io.image import load_nifti, save_nifti
 from dipy.reconst.shm import CsaOdfModel
-from dipy.io.utils import nifti1_symmat
+from dipy.io.utils import nifti1_symmat, create_tractogram_header
 from dipy.reconst.dti import (TensorModel, color_fa, fractional_anisotropy,
                               geodesic_anisotropy, mean_diffusivity,
                               axial_diffusivity, radial_diffusivity,
@@ -17,22 +17,14 @@ from dipy.direction import peaks_from_model
 from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
 from dipy.tracking import utils
 from dipy.io.stateful_tractogram import Space, StatefulTractogram
-from dipy.io.streamline import save_trk
+from dipy.io.streamline import save_trk, load_trk
 from dipy.tracking.local_tracking import LocalTracking
 from dipy.tracking.streamline import Streamlines
 from dipy.segment.mask import median_otsu
 from dipy.segment.bundles import RecoBundles
 
 
-# Process 1: Bundles/Tractography/BUAN
-# Input: 25 subjects, each with 2 DWI and corresponding bvecs/bvals (total of 50 NIFTI images).
-# Output:
-# Six major white matter bundles (left/right Arcuate Fasciculus, left/right Optic Radiations, left/right Corticospinal tract)
-# Your favorite bundle similarity metric (BUAN)
-# FA map
-# MD map
-# Whole brain connectome weighted by number of streamlines and using HCP’s multi-modal parcellation, version 1.0 (HCP_MMP1.0).
-# DTI
+from quantconn.download import get_30_bundles_atlas_hcp842
 
 
 def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
@@ -74,9 +66,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     save_nifti(pjoin(output_path, 'rd.nii.gz'), RD.astype(np.float32), affine)
 
     # TODO:  Get White matter mask
-    # download The-HCP-MMP1.0-atlas-in-FSL https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL
-    # https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/blob/master/MNI_Glasser_HCP_v1.0.nii.gz
-    # create a Get function for the downloaded atlas
+    # download The-HCP-MMP1.0-atlas
     # register T1 whith this atlas
     # visualize white matter index in this atlas
     # get white matter mask
@@ -85,7 +75,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     white_matter = FA > 0.2
 
     csa_model = CsaOdfModel(gtab, sh_order=6)
-    csa_peaks = peaks_from_model(csa_model, data, default_sphere,
+    csa_peaks = peaks_from_model(csa_model, maskdata, default_sphere,
                                  relative_peak_threshold=.8,
                                  min_separation_angle=45,
                                  mask=white_matter)
@@ -96,28 +86,58 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=affine, step_size=.5)
-    streamlines = Streamlines(streamlines_generator)
+    target_streamlines = Streamlines(streamlines_generator)
 
-    sft = StatefulTractogram(streamlines, data_img, Space.RASMM)
-    save_trk(sft, pjoin(output_path, "full_tractogram.trk"), streamlines)
+    target_sft = StatefulTractogram(target_streamlines, data_img, Space.RASMM)
+    save_trk(target_sft, pjoin(output_path, "full_tractogram.trk"))
 
-    # recobunble
-    # moved, transform, qb_centroids1, qb_centroids2 = whole_brain_slr(
-    # atlas, target, x0='affine', verbose=True, progressive=True,
-    # rng=np.random.RandomState(1984))
+    # Recobunble
 
-    # np.save("slr_transform.npy", transform)
+    # Step 1: Register target tractogram to model atlas space using SLR
 
-    # rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2001))
+    atlas_file, all_bundles_files = get_30_bundles_atlas_hcp842()
+    sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
+    atlas_header = create_tractogram_header(atlas_file,
+                                            *sft_atlas.space_attributes)
 
-    # recognized_af_l, af_l_labels = rb.recognize(model_bundle=model_af_l,
-    #                                             model_clust_thr=0.1,
-    #                                             reduction_thr=15,
-    #                                             pruning_thr=7,
-    #                                             reduction_distance='mdf',
-    #                                             pruning_distance='mdf',
-    #                                             slr=True)
-    # save the recognize bundle
+    slr_result = whole_brain_slr(sft_atlas.streamlines, target_streamlines,
+                                 x0='affine', verbose=True, progressive=True,
+                                 rng=np.random.RandomState(1983))
+
+    moved, transform, qb_centroids1, qb_centroids2 = slr_result
+    moved_sft = StatefulTractogram(moved, atlas_header, Space.RASMM)
+
+    np.save(pjoin(output_path, "slr_transform.npy"), transform)
+    save_trk(moved_sft, pjoin(output_path, "full_tractogram_moved.trk"), moved)
+
+    # Step 2: Recognize bundles in the target tractogram
+    rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2023))
+
+    selected_bundles = ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']
+    for bundle_name in selected_bundles:
+        model_bundle_path = all_bundles_files.get(bundle_name)
+        if not model_bundle_path:
+            print(f"Bundle {bundle_name} not found in the atlas")
+            continue
+        model_bundle = load_trk(model_bundle_path, "same",
+                                bbox_valid_check=False)
+
+        recognized_bundle, model_labels = rb.recognize(
+            model_bundle=model_bundle.streamlines, model_clust_thr=0.1,
+            reduction_thr=15, pruning_thr=7, reduction_distance='mdf',
+            pruning_distance='mdf', slr=True)
+
+        reco = StatefulTractogram(recognized_bundle, atlas_header,
+                                  Space.RASMM)
+        save_trk(reco, pjoin(output_path, f"{bundle_name}_in_atlas_space.trk"),
+                 bbox_valid_check=False)
+        reco = StatefulTractogram(target_streamlines[model_labels],
+                                  data_img, Space.RASMM)
+        save_trk(reco, pjoin(output_path, f"{bundle_name}_in_orig_space.trk"),
+                 bbox_valid_check=False)
+
+    # Connectivity matrix
+
 
 
 
