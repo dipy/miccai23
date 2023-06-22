@@ -1,11 +1,15 @@
 import numpy as np
+import glob
+import os
 from os.path import join as pjoin
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.align.streamwarp import (bundlewarp, bundlewarp_shape_analysis)
-from dipy.tracking.streamline import (set_number_of_points, Streamlines)
+from dipy.tracking.streamline import (set_number_of_points, Streamlines, transform_streamlines)
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.stats.analysis import assignment_map
 from dipy.io.streamline import load_trk
+from scipy.ndimage import map_coordinates
+
 
 
 def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
