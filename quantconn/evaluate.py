@@ -14,6 +14,8 @@ from scipy.ndimage import map_coordinates
 
 def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
 
+    # Bundle shape difference (between A & B) profile with BundleWarp displacement field
+    
     bundle1 = load_trk(bundles_A[0], reference="same",
                        bbox_valid_check=False).streamlines
     bundle2 = load_trk(bundles_B[0], reference="same",
@@ -31,6 +33,8 @@ def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
     np.save(pjoin(out_dir, 'shape_profile.npy'), shape_profile)
     np.save(pjoin(out_dir, 'shape_profile_stdv.npy'), stdv)
 
+    # Bundle shape similarity score between two bundles (A & B)
+    
     rng = np.random.RandomState()
     clust_thr = [0]
     threshold = 2 # very strict threshold
@@ -39,7 +43,7 @@ def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
                                        threshold)
     np.save(pjoin(out_dir, 'shape_similarity_score.npy'), stdv)
 
-    # BUAN profiles code
+    # BUAN profiles of A & B bundles with DTI metrics
     
     n=100 # number of segments along the length of the bundle
     
