@@ -121,3 +121,20 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
 
 
+# Process 1: Bundles/Tractography/BUAN
+# Input: 25 subjects, each with 2 DWI and corresponding bvecs/bvals (total of 50 NIFTI images).
+# Output:
+# Six major white matter bundles (left/right Arcuate Fasciculus, left/right Optic Radiations, left/right Corticospinal tract)
+# Your favorite bundle similarity metric (BUAN)
+# FA map
+# MD map
+# Whole brain connectome weighted by number of streamlines and using HCP’s multi-modal parcellation, version 1.0 (HCP_MMP1.0).
+# DTI
+# Process 2: Evaluation
+# Input: Bundles, Connectome, FA/MD maps
+# Output:
+# Bundle metrics describing shape (length, volume)
+# Bundle tractometry (FA/MD along bundle or average FA/MD in b
+
+
+# How do we evaluate connectome ?

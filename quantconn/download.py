@@ -4,32 +4,58 @@ import requests
 
 from bs4 import BeautifulSoup
 from dipy.data.fetcher import _make_fetcher
-from dipy.data import get_two_hcp842_bundles
-from dipy.data import (fetch_target_tractogram_hcp,
-                       fetch_bundle_atlas_hcp842,
-                       get_bundle_atlas_hcp842,
-                       get_target_tractogram_hcp)
 
-from quantconn.constants import ts1_subjects, miccai23_home
+from quantconn.constants import miccai23_home
 
-HCP_MMP_1_0_URL = \
-    "https://github.com/mbedini/The-HCP-MMP1.0-atlas-in-FSL/raw/master/"
+
+ICBM_152_2009A_NONLINEAR_URL = \
+    "http://www.bic.mni.mcgill.ca/~vfonov/icbm/2009/"
 
 fetch_hcp_mmp_1_0_atlas = _make_fetcher(
     "fetch_hcp_mmp_1_0_atlas",
     miccai23_home,
-    HCP_MMP_1_0_URL,
-    ['MNI_Glasser_HCP_v1.0.nii.gz'],
-    ['MNI_Glasser_HCP_v1.0.nii.gz'],
-    ['2f2b41899322a0cccc92df84e4939353'],
-    doc="Download the following ",
-    msg=("You can find more information about this dataset")
+    "https://ndownloader.figshare.com/files/",
+    ['5534024', '5534027', '5594360', '5594363', '5594366'],
+    ['HCPMMP1.0_surf2vol.png', 'HCP-MMP1_on_MNI152_ICBM2009a_nlin.txt',
+     'HCP-MMP1_on_MNI152_ICBM2009a_nlin_hd.nii.gz',
+     'HCP-MMP1_on_MNI152_ICBM2009a_nlin.nii.gz',
+     'convertHCP_MMP_to_MNI_volumetric.m'],
+    ['6f1a1daaf7a31b492159db738e4442d3', '13dee6127b5a6248f39c4775574bfdfc',
+     '2b75805a61b01d4dbaa6afe522bdc79e', '4a6a53f08e56413cddf56f9629a17bf1',
+     'ed27e96dde3ae849d87132b49a018e10'],
+    doc="Download the HCP MMP 1.0 atlas",
+    msg=("You can find more information about this dataset at"
+         "https://figshare.com/articles/dataset/HCP-MMP1_0_projected_on_MNI2009a_GM_volumetric_in_NIfTI_format/3501911")
     )
 
-# Build fetcher for
-# https://figshare.com/articles/dataset/Atlas_of_30_Human_Brain_Bundles_in_MNI_space/12089652
-# https://figshare.com/ndownloader/files/26842853
 
+fetch_icbm_2009a_nonlinear_asym = _make_fetcher(
+    "fetch_icbm_2009a_nonlinear",
+    miccai23_home,
+    ICBM_152_2009A_NONLINEAR_URL,
+    ['mni_icbm152_nlin_asym_09a_nifti.zip'],
+    ['mni_icbm152_nlin_asym_09a_nifti.zip'],
+    ['444593c5b49138a45a1679c9ddc4ef96'],
+    doc="Download the ICBM 2009a nonlinear asymmetric template",
+    msg=("You can find more information about this dataset at"
+         "http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009"),
+    data_size="57MB",
+    unzip=True
+    )
+
+fetch_30_bundles_atlas_hcp842 = _make_fetcher(
+    "fetch_30_bundles_atlas_hcp842",
+    miccai23_home,
+    'https://ndownloader.figshare.com/files/',
+    ['26842853'],
+    ['atlas_30_bundles.zip'],
+    ['f3922cdbea4216823798fade128d6782'],
+    doc="Download the 30 bundles atlas in MNI space (2009c)",
+    msg=("You can find more information about this dataset at"
+         "https://figshare.com/articles/dataset/Atlas_of_30_Human_Brain_Bundles_in_MNI_space/12089652"),
+    data_size="207.09MB",
+    unzip=True
+    )
 
 
 def download_folder(public_folder_link, destination_dir):
@@ -98,9 +124,13 @@ def download_folder(public_folder_link, destination_dir):
 
 
 def download_folder_2(public_folder_url, destination_dir):
+    #     link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z/folder/208448607516"
+    #     # link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z"
+    #     # link = "https://api.box.com/2.0/folders/208448607516/items"
+
     # Define the public folder URL
-    # public_folder_url = 'PUBLIC_FOLDER_URL_HERE'
-    # destination_dir = 'DESTINATION_DIRECTORY_PATH'
+    # public_folder_url = 'PUBLIC_FOLDER_URL_HERE'  # link
+    # destination_dir = 'DESTINATION_DIRECTORY_PATH'  # miccai23_home
 
     # Create the destination directory if it doesn't exist
     if not os.path.exists(destination_dir):
@@ -154,21 +184,3 @@ def download_folder_2(public_folder_url, destination_dir):
         print("Failed to retrieve public folder contents.")
 
     print("Folder download complete.")
-
-
-def download_data():
-    target_file, target_folder = fetch_target_tractogram_hcp()
-    atlas_file, atlas_folder = fetch_bundle_atlas_hcp842()
-    fetch_hcp_mmp_1_0_atlas()
-
-
-# @click.command()
-# @click.option('--db', default="training", type=click.Choice(['training', 'testing', 'test_submision1', 'test_submision2'], case_sensitive=False), prompt='Enter data name to download', help='Data to download')
-# @click.option('--subject', '-sbj', default=ts1_subjects[:2], type=click.Choice(ts1_subjects, case_sensitive=False), multiple=True, prompt='Enter subject to download', help='Subject to download')
-# def download(db, subject):
-#     print(f'Deploying current application artifact to {db} environment in cloud...{subject}')
-#     link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z/folder/208448607516"
-#     # link = "https://vanderbilt.app.box.com/s/owijt2mo2vhrp3rjonf90n3hoinygm8z"
-#     # link = "https://api.box.com/2.0/folders/208448607516/items"
-
-#     download_folder_2(link, miccai23_home)

@@ -5,24 +5,33 @@ from typing import List, Tuple, Optional
 from typing_extensions import Annotated
 
 import typer
+from rich import print
 
-from quantconn.constants import miccai23_home
-from quantconn.download import download_data
+from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
+                                fetch_icbm_2009a_nonlinear_asym,
+                                fetch_30_bundles_atlas_hcp842)
 from quantconn.evaluate import evaluate_data
 from quantconn.process import process_data
 from quantconn.viz import show_data
 
 
-app = typer.Typer(help="MICCAI 23 Challenge Tools for Quantitative Connectivity through Harmonized Preprocessing of Diffusion competition")
+app = typer.Typer(help="MICCAI 23 Challenge Tools for Quantitative"
+                  "Connectivity through Harmonized Preprocessing of"
+                  "Diffusion competition")
 
 
 @app.command()
 def download():
-    """
-    Download Atlas data
-    """
-    typer.echo("Downloading data...")
-    download_data()
+    """Download Atlas data."""
+    datas = [("Atlas ICBM 152 2009a NonLinear Asymetric",
+              fetch_icbm_2009a_nonlinear_asym),
+             ("HCP MMP 1.0 2009a template", fetch_hcp_mmp_1_0_atlas),
+             ("30 Bundles Atlas MNI 2009a", fetch_30_bundles_atlas_hcp842)]
+
+    for name, fetch in datas:
+        print(f"[bold blue]Downloading {name}...[/bold blue]")
+        fetch()
+        print("[bold green]Success ! :love-you_gesture: [/bold green]")
 
 
 @app.command()
@@ -36,9 +45,7 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                                typer.Option("--subject", "-sbj",
                                             )] = None,
             fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
-    """
-    process data
-    """
+    """Process your harmonized data."""
     typer.echo(f'📁 Input database path: {db_path}')
     typer.echo(f'📁 Destination path: {destination}')
     subjects = [d for d in os.listdir(db_path) if os.path.isdir(pjoin(db_path, d))]
@@ -53,46 +60,51 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
     typer.echo(f'🧠 {len(subjects)} subject(s) selected to process')
 
     for sub in subjects:
-        data_folder_a = pjoin(db_path, sub, "A")
-        data_folder_b = pjoin(db_path, sub, "B")
-        output_path_a = pjoin(destination, sub, "A")
-        output_path_b = pjoin(destination, sub, "B")
         t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
+        for mod in ["A", "B"]:
+            data_folder = pjoin(db_path, sub, mod)
+            output_path = pjoin(destination, sub, mod)
+            if not os.path.exists(data_folder):
+                print(f":yellow_circle: Missing data for subject {sub} in {mod} folder.")
+                if fail_fast:
+                    print(":boom: [bold red]Fail fast activated, exiting...[/bold red]")
+                    raise typer.Exit(code=1)
+                else:
+                    print(f":yellow_circle: [bold yellow]Skipping subject {sub}[/bold yellow]")
+                    continue
 
-        if not os.path.exists(output_path_a):
-            os.makedirs(output_path_a)
-        if not os.path.exists(output_path_b):
-            os.makedirs(output_path_b)
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
 
-        typer.echo(f"Processing {sub} case A...")
-        process_data(pjoin(data_folder_a, "dwi.nii.gz"),
-                     pjoin(data_folder_a, "dwi.bval"),
-                     pjoin(data_folder_a, "dwi.bvec"),
-                     t1_path,
-                     output_path_a)
-
-        typer.echo(f"Processing {sub} case B ...")
-        process_data(pjoin(data_folder_b, "dwi.nii.gz"),
-                     pjoin(data_folder_b, "dwi.bval"),
-                     pjoin(data_folder_b, "dwi.bvec"),
-                     t1_path,
-                     output_path_b)
+            try:
+                print(f"Processing {sub} case {mod}...")
+                process_data(pjoin(data_folder, "dwi.nii.gz"),
+                             pjoin(data_folder, "dwi.bval"),
+                             pjoin(data_folder, "dwi.bvec"),
+                             t1_path,
+                             output_path)
+                print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
+            except Exception as e:
+                print(f":boom: [bold red]Error while processing {sub} case {mod}[/bold red]")
+                print(e)
+                if fail_fast:
+                    print(":boom: [bold red]Fail fast activated, exiting...[/bold red]")
+                    raise typer.Exit(code=1)
+                else:
+                    print(f":yellow_circle: [bold yellow]Skipping subject {sub}[/bold yellow]")
+                    continue
 
 
 @app.command()
 def evaluate():
-    """
-    Evaluate your results
-    """
+    """Evaluate your results."""
     typer.echo("Evaluating your results")
     evaluate_data()
 
 
 @app.command()
 def visualize():
-    """
-    Visualize a data
-    """
+    """Visualize a data."""
     typer.echo("Visualizing data")
     show_data()
 
