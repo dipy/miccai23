@@ -5,8 +5,14 @@ from dipy.align.streamwarp import (bundlewarp, bundlewarp_shape_analysis)
 from dipy.tracking.streamline import (set_number_of_points, Streamlines)
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.stats.analysis import assignment_map
+from dipy.io.streamline import load_trk
 
-def evaluate_data(bundle1, bundle2):
+def evaluate_data(bundle1_fname, bundle2_fname, metrics_fnames, out_dir):
+
+    bundle1 = load_trk(bundle1_fname, reference="same",
+                    bbox_valid_check=False).streamlines
+    bundle2 = load_trk(bundle2_fname, reference="same",
+                    bbox_valid_check=False).streamlines
 
     static = Streamlines(set_number_of_points(bundle1, 20))
     moving = Streamlines(set_number_of_points(bundle2, 20))
