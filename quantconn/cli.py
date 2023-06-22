@@ -77,7 +77,7 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                 os.makedirs(output_path)
 
             try:
-                print(f"Processing {sub} case {mod}...")
+                print(f"[bold blue]Processing [green]{sub} / {mod}[/green] acquisition [/bold blue]")
                 process_data(pjoin(data_folder, "dwi.nii.gz"),
                              pjoin(data_folder, "dwi.bval"),
                              pjoin(data_folder, "dwi.bvec"),

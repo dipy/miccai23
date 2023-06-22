@@ -1,6 +1,7 @@
 from os.path import join as pjoin
 
 import numpy as np
+from rich import print
 
 from dipy.align.streamlinear import whole_brain_slr
 from dipy.core.gradients import gradient_table
@@ -32,9 +33,12 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     bvals, bvecs = read_bvals_bvecs(bval_fname, bvec_fname)
     gtab = gradient_table(bvals, bvecs)
 
+    print(':left_arrow_curving_right: Building mask')
     maskdata, mask = median_otsu(data, median_radius=3,
                                  vol_idx=np.where(gtab.b0s_mask)[0],
                                  numpass=1, autocrop=True, dilate=2)
+
+    print(':left_arrow_curving_right: Computing DTI metrics')
     tenmodel = TensorModel(gtab)
     tenfit = tenmodel.fit(maskdata)
 
@@ -73,13 +77,14 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
     # temporary solution
     white_matter = FA > 0.2
-
+    print(':left_arrow_curving_right: Reconstruction using CSA Model')
     csa_model = CsaOdfModel(gtab, sh_order=6)
     csa_peaks = peaks_from_model(csa_model, maskdata, default_sphere,
                                  relative_peak_threshold=.8,
                                  min_separation_angle=45,
                                  mask=white_matter)
 
+    print(':left_arrow_curving_right: Whole Brain Tractography')
     stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .25)
 
     seeds = utils.seeds_from_mask(white_matter, affine, density=[2, 2, 2])
@@ -94,9 +99,9 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     # Recobunble
 
     # Step 1: Register target tractogram to model atlas space using SLR
-
+    print(':left_arrow_curving_right: Register target tractogram to model atlas')
     atlas_file, all_bundles_files = get_30_bundles_atlas_hcp842()
-    sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=False)
+    sft_atlas = load_trk(atlas_file, "same", bbox_valid_check=True)
     atlas_header = create_tractogram_header(atlas_file,
                                             *sft_atlas.space_attributes)
 
@@ -108,9 +113,11 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     moved_sft = StatefulTractogram(moved, atlas_header, Space.RASMM)
 
     np.save(pjoin(output_path, "slr_transform.npy"), transform)
-    save_trk(moved_sft, pjoin(output_path, "full_tractogram_moved.trk"), moved)
+    save_trk(moved_sft, pjoin(output_path, "full_tractogram_moved.trk"),
+             bbox_valid_check=False)
 
     # Step 2: Recognize bundles in the target tractogram
+    print(':left_arrow_curving_right: Detecting bundles (AF_R, AF_L, CST_L, CST_R, OR_L, OR_R) in the target tractogram')
     rb = RecoBundles(moved, verbose=True, rng=np.random.RandomState(2023))
 
     selected_bundles = ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']
@@ -119,8 +126,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
         if not model_bundle_path:
             print(f"Bundle {bundle_name} not found in the atlas")
             continue
-        model_bundle = load_trk(model_bundle_path, "same",
-                                bbox_valid_check=False)
+        model_bundle = load_trk(model_bundle_path, "same")
 
         recognized_bundle, model_labels = rb.recognize(
             model_bundle=model_bundle.streamlines, model_clust_thr=0.1,
