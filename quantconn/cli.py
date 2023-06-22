@@ -96,7 +96,16 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
 
 
 @app.command()
-def evaluate():
+def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
+                                                   prompt="Please enter database path",
+                                                   exists=True, file_okay=False,)],
+             destination: Annotated[Path, typer.Option("--destination", "-dest",
+                                                       prompt="Please enter output path",
+                                                       exists=True, file_okay=False,)],
+             subject: Annotated[Optional[List[str]],
+                                typer.Option("--subject", "-sbj",
+                                             )] = None,
+             fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Evaluate your results."""
     typer.echo("Evaluating your results")
     evaluate_data()
@@ -105,8 +114,10 @@ def evaluate():
 @app.command()
 def visualize():
     """Visualize a data."""
-    typer.echo("Visualizing data")
-    show_data()
+    print("Visualizing data")
+    print(f":boom: [bold red]Not implemented yet[/bold red]")
+    # show_data()
+    raise typer.Exit(code=1)
 
 
 # /Users/skoudoro/.miccai23_home/TestSubmission_1
