@@ -3,7 +3,8 @@
 ###############################################################################
 
 # Use python base image
-FROM python:3.9-slim-bullseye
+# FROM python:3.9-slim-bullseye
+FROM python:3.9
 
 RUN apt-get update \
 && apt-get install -y --no-install-recommends git \
