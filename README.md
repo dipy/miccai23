@@ -19,9 +19,9 @@
 - [❗ What is Quantconn Challenge?](#what-is-quantconn-challenge)
 - [⚡ About the Data](#about-the-data)
 - [🏁 Getting Started](#getting-started)
-    - [👆 Register to the challenge](#register-to-the-challenge)
+    - [👆 Register for the challenge](#register-for-the-challenge)
     - [🚜 Installation](#installation)
-    - [🚀 Download Necessary templates](#download-necessary-templates)
+    - [🚀 Download the necessary templates](#download-the-necessary-templates)
     - [⚙️ Process your data](process-your-data)
     - [⛏️ Data Evaluation](#data-evaluation)
     - [💬 Help](#help)
@@ -57,10 +57,10 @@ Site B DW images were acquired using single-shot echo planar imaging (EPI) with 
 ## 🏁 Getting Started
 
 
-### 👆 Register to the challenge
+### 👆 Register for the challenge
 
 - Please fill out [THIS FORM](https://docs.google.com/forms/d/e/1FAIpQLScKUFimuY7Pw5e9VuOUPGnp2dznKpI4uy98k6k5TCuEyxnN5w/viewform) to register.
-- Make sure you downloaded the datas above
+- Make sure you downloaded the data above
 
 ### 🚜 Tools Installation
 
@@ -77,7 +77,7 @@ git clone https://github.com/dipy/miccai23.git
 pip install -e .
 ```
 
-## 🚀 Download Necessary templates
+## 🚀 Download the necessary templates
 
 ```bash
 quantconn download
@@ -89,7 +89,7 @@ Using this command, 3 templates will be downloaded:
 
 ```bash
 # Process the whole data
-quantconn process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
+quantconn process -db {your_database_path}/Training -dest {your_output_folder}
 
 # Process one subject only (here sub-8887801).
 quantconn process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
@@ -103,7 +103,7 @@ quantconn process -db {your_database_path}/Training -dest {your_output_folder} -
 
 ```bash
 # Process the whole data
-quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
+quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder}
 
 # Process one subject only (here sub-8887801).
 quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
