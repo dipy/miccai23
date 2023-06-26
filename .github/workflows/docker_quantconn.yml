@@ -5,6 +5,10 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: quantconn
+      IMAGE_NAMESPACE: dipy
+      TAG: latest
     # permissions:
     #   contents: read
     #   pull-requests: write
@@ -19,14 +23,28 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Build Quantconn docker image
-      run: sh ./quantconn_docker/docker-build.sh \
-        "${{github.sha}}" "dipy"
+      run: |
+        NO_TAG="ghcr.io/${IMAGE_NAMESPACE}/${IMAGE_NAME}"
+        TAG="${NO_TAG}:${{github.sha}}"
+        TAG2="${NO_TAG}:latest"
+        TAG="$(echo "${TAG}" | tr -d '[:space:]')"
+        TAG2="$(echo "${TAG2}" | tr -d '[:space:]')"
+
+        echo $TAG
+        docker build --no-cache -t $TAG -t $TAG2 .
 
     - name: Build a tagged image
       if: startsWith(github.event.ref, 'refs/tags')
       run: |
-        sh ./quantconn_docker/docker-build.sh \
-          "${GITHUB_REF:10}" "dipy"
+        NO_TAG="ghcr.io/${IMAGE_NAMESPACE}/${IMAGE_NAME}"
+        TAG="${NO_TAG}:${GITHUB_REF:10}"
+        TAG2="${NO_TAG}:latest"
+        TAG="$(echo "${TAG}" | tr -d '[:space:]')"
+        TAG2="$(echo "${TAG2}" | tr -d '[:space:]')"
+
+        echo $TAG
+        docker build --no-cache -t $TAG -t $TAG2 .
+
 
     - name: Login to GHCR
       if: github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags')
@@ -38,4 +56,8 @@ jobs:
 
     - name: Push Quantconn docker image
       if: github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags')
-      run: sh ./quantconn_docker/docker-push.sh "dipy"
+      run: |
+        NO_TAG="ghcr.io/${IMAGE_NAMESPACE}/${IMAGE_NAME}"
+        NO_TAG="$(echo "${NO_TAG}" | tr -d '[:space:]')"
+
+        docker push --all-tags $NO_TAG

@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED True
 ARG COMMIT
 
 # Copy and Install Quantconn
-COPY ../quantconn ./
+COPY ./quantconn ./quantconn
 RUN pip install --no-cache-dir quantconn
 # RUN pip install --no-cache-dir git+https://github.com/dipy/miccai23.git@${COMMIT}
 
