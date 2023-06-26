@@ -15,7 +15,10 @@ ENV PYTHONUNBUFFERED True
 
 ARG COMMIT
 
-# Install pyAFQ
-RUN pip install --no-cache-dir git+https://github.com/dipy/miccai23.git@${COMMIT}
+# Copy and Install Quantconn
+COPY ../quantconn ./
+RUN pip install --no-cache-dir quantconn
+# RUN pip install --no-cache-dir git+https://github.com/dipy/miccai23.git@${COMMIT}
+
 
 ENTRYPOINT ["quantconn"]
