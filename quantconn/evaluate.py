@@ -4,28 +4,29 @@ import os
 from os.path import join as pjoin
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.align.streamwarp import (bundlewarp, bundlewarp_shape_analysis)
-from dipy.tracking.streamline import (set_number_of_points, Streamlines, transform_streamlines)
-from dipy.segment.bundles import bundle_shape_similarity
+from dipy.tracking.streamline import (set_number_of_points, Streamlines,
+                                      transform_streamlines)
 from dipy.stats.analysis import assignment_map
 from dipy.io.streamline import load_trk
-from scipy.ndimage import map_coordinates
+from dipy.io.image import load_nifti
 
+from scipy.ndimage import map_coordinates
 
 
 def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
 
     # Bundle shape difference (between A & B) profile with BundleWarp displacement field
 
-    bundle1 = load_trk(bundles_A[0], reference="same",
+    bundle1 = load_trk(bundles_A, reference="same",
                        bbox_valid_check=False).streamlines
-    bundle2 = load_trk(bundles_B[0], reference="same",
+    bundle2 = load_trk(bundles_B, reference="same",
                        bbox_valid_check=False).streamlines
 
     static = Streamlines(set_number_of_points(bundle1, 20))
     moving = Streamlines(set_number_of_points(bundle2, 20))
 
-    deformed_bundle, moving_aligned, distances, match_pairs, warp_map = bundlewarp(static, moving,
-                                                                                    alpha=0.001, beta=20)
+    bw_results = bundlewarp(static, moving, alpha=0.001, beta=20)
+    deformed_bundle, moving_aligned, distances, match_pairs, warp_map = bw_results
 
     shape_profile, stdv = bundlewarp_shape_analysis(
         moving_aligned, deformed_bundle, no_disks=10, plotting=True)
@@ -45,13 +46,13 @@ def evaluate_data(bundles_A, bundles_B, model_bundle, metric_folder, out_dir):
 
     # BUAN profiles of A & B bundles with DTI metrics
 
-    n=100 # number of segments along the length of the bundle
+    n = 100 # number of segments along the length of the bundle
 
     for k in range(2):
 
-        if k==0:
+        if k == 0:
             folder = 'A'
-        elif k=='1':
+        elif k == '1':
             folder = 'B'
 
         bundle = load_trk(bundles_+folder[0], reference="same",

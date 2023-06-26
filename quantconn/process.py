@@ -128,6 +128,8 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
             continue
         model_bundle = load_trk(model_bundle_path, "same")
 
+        # TODO: Check if those parameters are good for all bundles
+        # we might need to personalize them for each bundle
         recognized_bundle, model_labels = rb.recognize(
             model_bundle=model_bundle.streamlines, model_clust_thr=0.1,
             reduction_thr=15, pruning_thr=7, reduction_distance='mdf',

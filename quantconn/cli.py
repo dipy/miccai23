@@ -9,10 +9,12 @@ from rich import print
 
 from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
                                 fetch_icbm_2009a_nonlinear_asym,
-                                fetch_30_bundles_atlas_hcp842)
+                                fetch_30_bundles_atlas_hcp842,
+                                get_30_bundles_atlas_hcp842)
 from quantconn.evaluate import evaluate_data
 from quantconn.process import process_data
 from quantconn.viz import show_data
+from quantconn.utils import print_input_info, get_valid_subjects
 
 
 app = typer.Typer(help="MICCAI 23 Challenge Tools for Quantitative"
@@ -46,18 +48,8 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                                             )] = None,
             fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Process your harmonized data."""
-    typer.echo(f'📁 Input database path: {db_path}')
-    typer.echo(f'📁 Destination path: {destination}')
-    subjects = [d for d in os.listdir(db_path) if os.path.isdir(pjoin(db_path, d))]
-
-    if subject:
-        subjects = [s for s in subjects if s in subject]
-
-    if not subjects:
-        typer.echo(f"No subjects found in {db_path}")
-        raise typer.Exit(code=1)
-
-    typer.echo(f'🧠 {len(subjects)} subject(s) selected to process')
+    print_input_info(db_path, destination)
+    subjects = get_valid_subjects(db_path, subject)
 
     for sub in subjects:
         t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
@@ -108,7 +100,29 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
              fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Evaluate your results."""
     typer.echo("Evaluating your results")
-    evaluate_data()
+    print_input_info(db_path, destination)
+    subjects = get_valid_subjects(db_path, subject)
+
+    _, all_bundles_files = get_30_bundles_atlas_hcp842()
+
+    for sub in subjects:
+        # t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
+        selected_bundles = ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']
+        output_path = pjoin(destination, sub, 'metrics')
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        for bundle_name in selected_bundles:
+            model_bundle_path = all_bundles_files.get(bundle_name)
+            if not model_bundle_path:
+                print(f"Bundle {bundle_name} not found in the atlas")
+                continue
+
+            bundle_a = pjoin(destination, sub, "A",
+                             f"{bundle_name}_in_atlas_space.trk")
+            bundle_b = pjoin(destination, sub, "B",
+                             f"{bundle_name}_in_atlas_space.trk")
+
+            evaluate_data(bundle_a, bundle_b, model_bundle_path, output_path)
 
 
 @app.command()
