@@ -87,7 +87,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     print(':left_arrow_curving_right: Whole Brain Tractography')
     stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .25)
 
-    seeds = utils.seeds_from_mask(white_matter, affine, density=[2, 2, 2])
+    seeds = utils.seeds_from_mask(white_matter, affine, density=[8, 8, 8])
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=affine, step_size=.5)
@@ -130,10 +130,15 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
         # TODO: Check if those parameters are good for all bundles
         # we might need to personalize them for each bundle
+        # attempts = [(15, 7), (20, 10), (25, 12)]
+        # for reduction_thr, pruning_thr in attempts:
         recognized_bundle, model_labels = rb.recognize(
             model_bundle=model_bundle.streamlines, model_clust_thr=0.1,
-            reduction_thr=15, pruning_thr=7, reduction_distance='mdf',
-            pruning_distance='mdf', slr=True)
+            reduction_thr=20, pruning_thr=10,
+            reduction_distance='mdf', pruning_distance='mdf', slr=True)
+
+            # if len(recognized_bundle):
+            #     break
 
         reco = StatefulTractogram(recognized_bundle, atlas_header,
                                   Space.RASMM)

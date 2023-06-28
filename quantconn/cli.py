@@ -113,16 +113,26 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
             os.makedirs(output_path)
         for bundle_name in selected_bundles:
             model_bundle_path = all_bundles_files.get(bundle_name)
+            metric_path_a = pjoin(destination, sub, 'A')
+            metric_path_b = pjoin(destination, sub, 'B')
             if not model_bundle_path:
                 print(f"Bundle {bundle_name} not found in the atlas")
                 continue
+            # TODO: QUIT IF NOT FOUND
 
-            bundle_a = pjoin(destination, sub, "A",
-                             f"{bundle_name}_in_atlas_space.trk")
-            bundle_b = pjoin(destination, sub, "B",
-                             f"{bundle_name}_in_atlas_space.trk")
+            bundle_a_atlas_path = pjoin(destination, sub, "A",
+                                        f"{bundle_name}_in_atlas_space.trk")
+            bundle_a_native_path = pjoin(destination, sub, "A",
+                                         f"{bundle_name}_in_orig_space.trk")
+            bundle_b_atlas_path = pjoin(destination, sub, "B",
+                                        f"{bundle_name}_in_atlas_space.trk")
+            bundle_b_native_path = pjoin(destination, sub, "B",
+                                         f"{bundle_name}_in_orig_space.trk")
 
-            evaluate_data(bundle_a, bundle_b, model_bundle_path, output_path)
+            evaluate_data(bundle_a_native_path, bundle_a_atlas_path,
+                          bundle_b_native_path, bundle_b_atlas_path,
+                          model_bundle_path, metric_path_a, metric_path_b,
+                          output_path)
 
 
 @app.command()
@@ -139,3 +149,4 @@ def visualize():
 # /Users/skoudoro/data/miccai23/results
 
 # quantconn process -db /Users/skoudoro/data/miccai23/Training -dest /Users/skoudoro/data/miccai23/result -sbj sub-8887801 -ff
+# quantconn evaluate -db /Users/skoudoro/data/miccai23/Training -dest /Users/skoudoro/data/miccai23/result -sbj sub-8887801 -ff
