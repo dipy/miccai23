@@ -87,7 +87,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
     print(':left_arrow_curving_right: Whole Brain Tractography')
     stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .25)
 
-    seeds = utils.seeds_from_mask(white_matter, affine, density=[8, 8, 8])
+    seeds = utils.seeds_from_mask(white_matter, affine, density=[2, 2, 2])
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=affine, step_size=.5)
