@@ -24,7 +24,7 @@ app = typer.Typer(help="MICCAI 23 Challenge Tools for Quantitative"
 
 @app.command()
 def download():
-    """Download Atlas data."""
+    """Download Atlas dataset."""
     datas = [("Atlas ICBM 152 2009a NonLinear Asymetric",
               fetch_icbm_2009a_nonlinear_asym),
              ("HCP MMP 1.0 2009a template", fetch_hcp_mmp_1_0_atlas),
@@ -136,6 +136,26 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                           model_bundle_path, bundle_name, metric_path_a,
                           metric_path_b, output_path)
         print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
+
+
+@app.command()
+def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
+                                                    prompt="Please enter output path",
+                                                    exists=True, file_okay=False,)]):
+    """Merge evaluation results."""
+    print("[blue] Merging results [/blue]")
+    print_input_info(destination=destination)
+    subjects = get_valid_subjects(destination)
+    _merging_results = pjoin(destination, "_merged_results.npy")
+    for sub in subjects:
+        output_path = pjoin(destination, sub, 'metrics')
+        if not os.path.exists(output_path):
+            print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
+            continue
+        print(f"[bold blue]Merging [green]{sub}[/green] subject [/bold blue]")
+        # merge_results(output_path, _merging_results)
+
+    print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
 
 @app.command()

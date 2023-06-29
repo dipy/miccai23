@@ -172,4 +172,6 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
 # How do we evaluate connectome ?
 
-# 9h 36m 42s
+# 78 Subjects
+# Processing: 9h 36m 42s
+# Evluation: 2h 25m 58s

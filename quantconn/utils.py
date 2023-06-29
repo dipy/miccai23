@@ -6,9 +6,11 @@ from typing import List, Optional
 import typer
 
 
-def print_input_info(db_path: Path, destination: Path):
-    typer.echo(f'📁 Input database path: {db_path}')
-    typer.echo(f'📁 Destination path: {destination}')
+def print_input_info(db_path: Path = None, destination: Path = None):
+    if db_path is not None:
+        typer.echo(f'📁 Input database path: {db_path}')
+    if destination is not None:
+        typer.echo(f'📁 Destination path: {destination}')
 
 
 def get_valid_subjects(db_path: Path, subject: Optional[List[str]] = None):
