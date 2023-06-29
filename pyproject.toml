@@ -19,7 +19,8 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-  "dipy>=1.7.0",
+  # "dipy>=1.7.0",
+  "dipy@git+https://git@github.com/arokem/dipy@11a94c0fcf9b3",
   "typer[all]>=0.9.0",
   "requests>=2.26.0",
   "bs4",
@@ -58,3 +59,6 @@ packages = ["quantconn"]
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
 version_scheme = "release-branch-semver"
+
+[tool.hatch.metadata]
+allow-direct-references = true
