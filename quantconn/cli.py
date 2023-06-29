@@ -107,11 +107,13 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
 
     for sub in subjects:
         # t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
+        print(f"[bold blue]Evaluating [green]{sub}[/green] subject [/bold blue]")
         selected_bundles = ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         for bundle_name in selected_bundles:
+            print(f'[yellow]:left_arrow_curving_right: {bundle_name} bundle metrics [/yellow]')
             model_bundle_path = all_bundles_files.get(bundle_name)
             metric_path_a = pjoin(destination, sub, 'A')
             metric_path_b = pjoin(destination, sub, 'B')
@@ -131,8 +133,9 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
 
             evaluate_data(bundle_a_native_path, bundle_a_atlas_path,
                           bundle_b_native_path, bundle_b_atlas_path,
-                          model_bundle_path, metric_path_a, metric_path_b,
-                          output_path)
+                          model_bundle_path, bundle_name, metric_path_a,
+                          metric_path_b, output_path)
+        print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
 
 @app.command()
