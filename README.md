@@ -6,10 +6,10 @@
 ***
 </p>
 
-<div align="center">
+<!-- <div align="center">
  [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Contribution](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dipy/miccai23/blob/master/CONTRIBUTING.rst) [![PR](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/dipy/miccai23/compare)
 
-</div>
+</div> -->
 
 ---
 

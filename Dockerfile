@@ -21,8 +21,10 @@ COPY . .
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir packaging numpy scipy nibabel h5py tqdm
-RUN --mount=source=.git,target=.git,type=bind \
-    pip install --no-cache-dir .
+RUN pip install --no-cache-dir dipy
+RUN pip install --no-cache-dir .
+# RUN --mount=source=.git,target=.git,type=bind \
+#     pip install --no-cache-dir .
 # RUN pip install --no-cache-dir git+https://github.com/dipy/miccai23.git@${COMMIT}
 
 
