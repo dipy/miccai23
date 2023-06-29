@@ -47,7 +47,7 @@ jobs:
 
 
     - name: Login to GHCR
-      if: github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags')
+      if: github.ref == 'refs/heads/main' || startsWith(github.event.ref, 'refs/tags')
       uses: docker/login-action@v1
       with:
         registry: ghcr.io
@@ -55,7 +55,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push Quantconn docker image
-      if: github.ref == 'refs/heads/master' || startsWith(github.event.ref, 'refs/tags')
+      if: github.ref == 'refs/heads/main' || startsWith(github.event.ref, 'refs/tags')
       run: |
         NO_TAG="ghcr.io/${IMAGE_NAMESPACE}/${IMAGE_NAME}"
         NO_TAG="$(echo "${NO_TAG}" | tr -d '[:space:]')"
