@@ -21,10 +21,23 @@
 - [🏁 Getting Started](#getting-started)
     - [👆 Register for the challenge](#register-for-the-challenge)
     - [🚜 Installation](#installation)
+      - [Using Docker]()
+      - [Using Python]()
     - [🚀 Download the necessary templates](#download-the-necessary-templates)
+      - [Using Docker]()
+      - [Using Python]()
     - [⚙️ Process your data](process-your-data)
+      - [Using Docker]()
+      - [Using Python]()
     - [⛏️ Data Evaluation](#data-evaluation)
+      - [Using Docker]()
+      - [Using Python]()
+    - [🔀 Merge Results](#merge-results)
+      - [Using Docker]()
+      - [Using Python]()
     - [💬 Help](#help)
+      - [Using Docker]()
+      - [Using Python]()
     - [📄 Understanding my result](#understanding-my-result)
     - [⚠️ How to submit](#how-to-submit)
 - [✅ Tests](#tests)
@@ -64,6 +77,16 @@ Site B DW images were acquired using single-shot echo planar imaging (EPI) with 
 
 ### 🚜 Tools Installation
 
+#### Using Docker
+
+Run the following command to install the package:
+
+```bash
+docker pull ghcr.io/dipy/quantconn:latest
+```
+
+#### Using Python
+
 to install it, simply run
 
 ```terminal
@@ -79,6 +102,16 @@ pip install -e .
 
 ## 🚀 Download the necessary templates
 
+#### Using Docker
+
+Run the following command to install the package:
+
+```bash
+docker run ghcr.io/dipy/quantconn:latest download
+```
+
+#### Using Python
+
 ```bash
 quantconn download
 ```
@@ -87,6 +120,23 @@ Using this command, 3 templates will be downloaded:
 
 ### ⚙️ Process your data
 
+#### Using Docker
+
+Run the following command to process the dataset:
+
+```bash
+# Process the whole data
+docker run ghcr.io/dipy/quantconn:latest process -db {your_database_path}/Training -dest {your_output_folder}
+
+# Process one subject only (here sub-8887801).
+docker run ghcr.io/dipy/quantconn:latest process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
+
+# Process Multiple subjects (here sub-8887801, sub-8887801)
+docker run ghcr.io/dipy/quantconn:latest process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801 -sbj sub-8040001
+```
+
+#### Using Python
+
 ```bash
 # Process the whole data
 quantconn process -db {your_database_path}/Training -dest {your_output_folder}
@@ -94,27 +144,74 @@ quantconn process -db {your_database_path}/Training -dest {your_output_folder}
 # Process one subject only (here sub-8887801).
 quantconn process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
 
-# Process Multiple subject (here sub-8887801, sub-8887801)
+# Process Multiple subjects (here sub-8887801, sub-8887801)
 quantconn process -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801 -sbj sub-8040001
 ```
 
 
 #### ⛏️ Data Evaluation
 
+#### Using Docker
+
+Run the following command to evaluate the datasets:
+
 ```bash
 # Process the whole data
-quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder}
+docker run ghcr.io/dipy/quantconn:latest evaluate -db {your_database_path}/Training -dest {your_output_folder}
 
 # Process one subject only (here sub-8887801).
+docker run ghcr.io/dipy/quantconn:latest evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
+
+# Process Multiple subjects (here sub-8887801, sub-8887801)
+docker run ghcr.io/dipy/quantconn:latest evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801 -sbj sub-8040001
+```
+
+#### Using Python
+
+```bash
+# Evaluate the whole dataset
+quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder}
+
+# Evaluate one subject only (here sub-8887801).
 quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801
 
-# Process Multiple subject (here sub-8887801, sub-8887801)
+# Evaluate Multiple subjects (here sub-8887801, sub-8887801)
 quantconn evaluate -db {your_database_path}/Training -dest {your_output_folder} -sbj sub-8887801 -sbj sub-8040001
 ```
 
+#### 🔀 Merge Results
 
+#### Using Docker
+
+```bash
+# Merge the individual results
+docker run ghcr.io/dipy/quantconn:latest merge -dest {your_output_folder}
+```
+
+#### Using Python
+
+```bash
+# Merge the individual results
+quantconn merge -dest {your_output_folder}
+```
 
 ## 💬 Help
+
+#### Using Docker
+
+Run the following command to get help:
+
+```bash
+# General Help
+docker run ghcr.io/dipy/quantconn:latest --help
+# Specific help
+docker run ghcr.io/dipy/quantconn:latest download --help
+docker run ghcr.io/dipy/quantconn:latest process --help
+docker run ghcr.io/dipy/quantconn:latest evaluate --help
+docker run ghcr.io/dipy/quantconn:latest visualize --help
+```
+
+#### Using Python
 
 ```bash
 # General help
