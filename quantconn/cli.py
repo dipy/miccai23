@@ -149,7 +149,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     subjects = get_valid_subjects(destination)
     _merging_results_path = pjoin(destination, "_merged_results.csv")
     _merging_results = []
-    # TODO: Check all paths
+    # TODO: Check all paths if they exists. If not, skip subject
     for sub in subjects:
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):

@@ -110,7 +110,7 @@ def create_buan_profiles(bundle_native, bundle_atlas, model_bundle,
 
         for i in range(n):
 
-            buan_mean_profile[i] = np.mean(values[index == i])
+            buan_mean_profile[i] = np.nanmean(values[index == i])
             buan_stdv[i] = np.std(values[index == i])
 
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_mean_profile.npy"), buan_mean_profile)
