@@ -6,6 +6,7 @@ from typing_extensions import Annotated
 
 import typer
 from rich import print
+import numpy as np
 
 from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
                                 fetch_icbm_2009a_nonlinear_asym,
@@ -146,14 +147,37 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     print("[blue] Merging results [/blue]")
     print_input_info(destination=destination)
     subjects = get_valid_subjects(destination)
-    _merging_results = pjoin(destination, "_merged_results.npy")
+    _merging_results_path = pjoin(destination, "_merged_results.csv")
+    _merging_results = []
+    # TODO: Check all paths
     for sub in subjects:
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):
             print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
             continue
         print(f"[bold blue]Merging [green]{sub}[/green] subject [/bold blue]")
-        # merge_results(output_path, _merging_results)
+
+        subject_scores = [sub]
+        headers = ['subject', 'shape_similarity_score', 'shape_profile']
+
+        score = np.load(pjoin(output_path, 'shape_similarity_score.npy'))
+        shape_profile = np.load(pjoin(output_path, 'shape_profile.npy')).mean()
+
+        subject_scores.append(score)
+        subject_scores.append(shape_profile)
+        for bundle_name in ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']:
+            for metric in ['ad', 'fa', 'ga', 'md', 'rd']:
+                metric_path_a = pjoin(output_path, f"{bundle_name}_{metric}_A_buan_mean_profile.npy")
+                metric_path_b = pjoin(output_path, f"{bundle_name}_{metric}_B_buan_mean_profile.npy")
+
+                val = np.mean(np.load(metric_path_a) - np.load(metric_path_b))
+                subject_scores.append(float(np.abs(val)))
+                headers.append(f"{bundle_name}_{metric}_mean")
+
+        _merging_results.append(subject_scores)
+
+    np.savetxt(_merging_results_path, np.asarray(_merging_results),
+               delimiter=',', header=','.join(headers), fmt='%s')
 
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 

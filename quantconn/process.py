@@ -174,4 +174,5 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path):
 
 # 78 Subjects
 # Processing: 9h 36m 42s
-# Evluation: 2h 25m 58s
+# Evaluation: 2h 25m 58s
+# Total: 11h 2m 40s
