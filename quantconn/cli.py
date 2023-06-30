@@ -161,7 +161,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         headers = ['subject', 'shape_similarity_score', 'shape_profile']
 
         score = np.load(pjoin(output_path, 'shape_similarity_score.npy'))
-        shape_profile = np.load(pjoin(output_path, 'shape_profile.npy')).mean()
+        shape_profile = np.nanmean(np.load(pjoin(output_path, 'shape_profile.npy')))
 
         subject_scores.append(score)
         subject_scores.append(shape_profile)
@@ -170,7 +170,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                 metric_path_a = pjoin(output_path, f"{bundle_name}_{metric}_A_buan_mean_profile.npy")
                 metric_path_b = pjoin(output_path, f"{bundle_name}_{metric}_B_buan_mean_profile.npy")
 
-                val = np.mean(np.load(metric_path_a) - np.load(metric_path_b))
+                val = np.nanmean(np.load(metric_path_a) - np.load(metric_path_b))
                 subject_scores.append(float(np.abs(val)))
                 headers.append(f"{bundle_name}_{metric}_mean")
 
