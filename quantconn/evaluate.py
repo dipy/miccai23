@@ -65,11 +65,13 @@ def evaluate_data(bundles_a_native_path, bundles_a_atlas_path,
 
     rng = np.random.RandomState()
     clust_thr = [0]
-    threshold = 2  # very strict threshold
+    threshold = 6  # very strict threshold
 
     sm_score = bundle_shape_similarity(bundle_a_atlas, bundle_b_atlas, rng, clust_thr,
                                        threshold)
     np.save(pjoin(out_dir, 'shape_similarity_score.npy'), sm_score)
+    # This needs to be updated to something like following
+    # np.save(pjoin(out_dir, bundle_name+'_shape_similarity_score.npy'), sm_score)
 
     # BUAN profiles of A & B bundles with DTI metrics
 
