@@ -53,7 +53,11 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
     subjects = get_valid_subjects(db_path, subject)
 
     for sub in subjects:
-        t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
+        t1_path = pjoin(db_path, sub, "anat", f"{sub}_T1w.nii.gz")
+        # t1_label_path = pjoin(db_path, sub, "anat", "aparc+aseg.nii.gz")
+        t1_label_path = pjoin(db_path, sub, "anat", "atlas_freesurfer_inT1space.nii.gz")
+        if not os.path.exists(t1_label_path):
+            t1_label_path = None
         for mod in ["A", "B"]:
             data_folder = pjoin(db_path, sub, mod)
             output_path = pjoin(destination, sub, mod)
@@ -74,8 +78,8 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                 process_data(pjoin(data_folder, "dwi.nii.gz"),
                              pjoin(data_folder, "dwi.bval"),
                              pjoin(data_folder, "dwi.bvec"),
-                             t1_path,
-                             output_path)
+                             t1_path, output_path,
+                             t1_labels_fname=t1_label_path)
                 print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
             except Exception as e:
                 print(f":boom: [bold red]Error while processing {sub} case {mod}[/bold red]")
