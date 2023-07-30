@@ -26,7 +26,7 @@ dependencies = [
   "scipy",
   "bs4",
   "matplotlib",
-  "git+https://github.com/MIC-DKFZ/HD-BET.git"
+  "HD-BET@git+https://github.com/MIC-DKFZ/HD-BET.git"
   ]
 dynamic = ["version"]
 
