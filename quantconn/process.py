@@ -99,7 +99,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     # get white matter mask
 
     # temporary solution
-    white_matter = FA > 0.2
+    white_matter = FA > 0.3
     print(':left_arrow_curving_right: Reconstruction using CSA Model')
     csa_model = CsaOdfModel(gtab, sh_order=6)
     csa_peaks = peaks_from_model(csa_model, maskdata, default_sphere,
@@ -115,16 +115,27 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=resliced_affine, step_size=.5)
+
+    # remove short streamlines
+    print(':left_arrow_curving_right: Remove short streamlines (< 30mm)')
+    from dipy.tracking.metrics import length
+    streamlines_generator = (s for s in streamlines_generator
+                             if length(s) > 30.0)
     target_streamlines = Streamlines(streamlines_generator)
 
     header = create_tractogram_header(TrkFile, resliced_affine,
                                       maskdata.shape[:3],
                                       new_vox_size,
                                       ''.join(nib.aff2axcodes(resliced_affine)))
-    target_sft = StatefulTractogram(target_streamlines, header, Space.VOX)
+    target_sft = StatefulTractogram(target_streamlines, header, Space.RASMM)
     save_trk(target_sft, pjoin(output_path, "full_tractogram.trk"),
              bbox_valid_check=False)
 
+    # import ipdb; ipdb.set_trace()
+    #     from dipy.viz.horizon.app import horizon
+    #     horizon(tractograms=[target_streamlines_in_t1_sft],
+    #             images=[(label_data, label_affine)], interactive=True,
+    #             cluster=True, world_coords=True)
     # Recobunble
 
     # Step 1: Register target tractogram to model atlas space using SLR
@@ -213,7 +224,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     t1_noskull_data, t1_noskull_affine, t1_noskull_img = \
         load_nifti(t1_skullstrip_fname, return_img=True)
 
-    print(':left_arrow_curving_right: Connectivity matrix: Registering DWI B0s to T1 /labels')
+    print(':left_arrow_curving_right: Connectivity matrix: Registering DWI B0s to T1 / labels')
     # Take one B0 instead of all of them or correct motion.
     mean_b0 = np.mean(maskdata[..., gtab.b0s_mask], -1)
     warped_b0, warped_b0_affine = affine_registration(
@@ -227,37 +238,39 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     target_streamlines_in_t1 = transform_streamlines(target_streamlines,
                                                      warped_b0_affine,
                                                      in_place=True)
-    # filter small streamlines
 
     # if 1:
     #     print(nb.aff2axcodes(mapping))
-    header = create_tractogram_header(TrkFile, warped_b0_affine,
-                                      maskdata.shape[:3],
-                                      new_vox_size, 'RAS')
+    header = create_tractogram_header(
+        TrkFile, warped_b0_affine, maskdata.shape[:3], new_vox_size,
+        ''.join(nib.aff2axcodes(warped_b0_affine)))
 
     target_streamlines_in_t1_sft = StatefulTractogram(target_streamlines_in_t1,
-                                                      header, Space.VOX)
+                                                      header, Space.RASMM)
     save_trk(target_streamlines_in_t1_sft,
              pjoin(output_path, "full_tractogram_in_t1.trk"),
              bbox_valid_check=False)
 
-    # import ipdb; ipdb.set_trace()
-
     # interactive = True
     # if interactive:
     #     from dipy.viz.horizon.app import horizon
-    #     horizon(tractograms=[resliced_target_sft],images=[(label_data, label_affine)], interactive=True, cluster=True)
-
-    # print(':left_arrow_curving_right: Connectivity matrix')
-    # # Connectivity matrix
-    M, grouping = utils.connectivity_matrix(
-        target_streamlines_in_t1_sft, warped_b0_affine,
-        label_data.get_fdata().astype(np.uint8), return_mapping=True,
-        mapping_as_streamlines=True)
-
+    #     horizon(tractograms=[target_streamlines_in_t1_sft],
+    #             images=[(label_data, label_affine)], interactive=True,
+    #             cluster=True, world_coords=True)
     # import ipdb; ipdb.set_trace()
-    # plt.imshow(np.log1p(M), interpolation='nearest')
-    # plt.savefig(pjoin(output_path, "connectivity.png"))
+
+    print(':left_arrow_curving_right: Connectivity matrix')
+    # # Connectivity matrix
+    M = utils.connectivity_matrix(
+        target_streamlines_in_t1, t1_noskull_affine,
+        label_data.astype(np.uint8))
+
+    # Normalize it by dividing by the length of the streamlines
+
+    np.save(pjoin(output_path, 'connectivity_matrice.npy'), M)
+    # if interactive:
+    #     plt.imshow(np.log1p(M), interpolation='nearest')
+    #     plt.savefig(pjoin(output_path, "connectivity.png"))
 
 
 
