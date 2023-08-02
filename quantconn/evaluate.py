@@ -5,6 +5,7 @@ from os.path import join as pjoin
 
 from rich import print
 from scipy.ndimage import map_coordinates
+import networkx as nx
 
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.align.streamwarp import (bundlewarp, bundlewarp_shape_analysis)
@@ -137,3 +138,23 @@ def save_empty_bundle_profiles(bundle_name, metric_folder, out_dir, stype=None):
 
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_mean_profile.npy"), buan_mean_profile)
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_profile_stdv.npy"), buan_stdv)
+
+
+def evaluate_matrice(input_path, output_path):
+    # Load the matrice
+    connectivity_matrix = np.load(pjoin(input_path, 'connectivity_matrice.npy'))
+    connectivity_graph = nx.from_numpy_array(connectivity_matrix)
+
+    betweenness_centrality = nx.betweenness_centrality(connectivity_graph)
+    # print("Betweenness Centrality:", betweenness_centrality)
+    global_efficiency_value = nx.algorithms.efficiency_measures.global_efficiency(connectivity_graph)
+    # print("Global Efficiency:", global_efficiency_value)
+    modularity = nx.community.modularity(
+        connectivity_graph,
+        nx.community.label_propagation_communities(connectivity_graph))
+    # print("Modularity:", modularity)
+
+    # Save the results
+    res = np.array([betweenness_centrality, global_efficiency_value,
+                    modularity])
+    np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)

@@ -12,7 +12,7 @@ from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
                                 fetch_icbm_2009a_nonlinear_asym,
                                 fetch_30_bundles_atlas_hcp842,
                                 get_30_bundles_atlas_hcp842)
-from quantconn.evaluate import evaluate_data
+from quantconn.evaluate import evaluate_data, evaluate_matrice
 from quantconn.process import process_data
 from quantconn.viz import show_data
 from quantconn.utils import print_input_info, get_valid_subjects
@@ -49,6 +49,8 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                                             )] = None,
             fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Process your harmonized data."""
+    # add meesage powered by DIPY
+
     print_input_info(db_path, destination)
     subjects = get_valid_subjects(db_path, subject)
 
@@ -104,6 +106,7 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                                              )] = None,
              fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Evaluate your results."""
+    # add message powered by DIPY and version
     typer.echo("Evaluating your results")
     print_input_info(db_path, destination)
     subjects = get_valid_subjects(db_path, subject)
@@ -140,6 +143,13 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                           bundle_b_native_path, bundle_b_atlas_path,
                           model_bundle_path, bundle_name, metric_path_a,
                           metric_path_b, output_path)
+
+        print('[yellow]:left_arrow_curving_right: Connectivity matrice evaluation [/yellow]')
+        input_path_a = pjoin(destination, sub, 'A')
+        input_path_b = pjoin(destination, sub, 'B')
+        evaluate_matrice(input_path_a, output_path)
+        evaluate_matrice(input_path_b, output_path)
+
         print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
 
