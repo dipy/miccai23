@@ -218,6 +218,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                                           'score': [conn_mat[i+1]]})
                 df_conn = pd.concat([df_conn, df_conn_2])
 
+    df_conn.to_csv(pjoin(destination, '_connectome_summary.csv'))
     np.savetxt(_merging_results_path, np.asarray(_merging_results),
                delimiter=',', header=','.join(headers), fmt='%s')
 
@@ -242,6 +243,9 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                                     'score': [data[mt][i]]})
             df_ss = pd.concat([df_ss, df_ss_2])
 
+    df_mm.to_csv(pjoin(destination, '_microstructural_measures_scores.csv'))
+    df_ss.to_csv(pjoin(destination, '_shape_similarity_scores.csv'))
+
     results_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
                                     raters='metric', ratings='score')
     results_mm = results_mm.set_index('Description')
@@ -257,8 +261,8 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     # Save results
     with open(pjoin(destination, '_final_sore.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
-        writer.writerow(['betweenness_centrality', 'global_efficiency',
-                         'modularity'])
+        writer.writerow(['Connectivity score', 'Microstructural measures',
+                         'Shape Similarity'])
         writer.writerow([float(icc_con.round(3)),
                          float(icc_mm.round(3)),
                          float(icc_ss.round(3))])

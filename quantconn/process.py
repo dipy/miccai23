@@ -66,6 +66,8 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     tensor_vals = lower_triangular(tenfit.quadratic_form)
     ten_img = nifti1_symmat(tensor_vals, affine=resliced_affine)
 
+    # TODO: flipping -> xx xy xz yy yz zz -> xx xy yy xz yx zz
+    # new_D = permute(D,[1 2 4 3 5 6])
     save_nifti(pjoin(output_path, 'tensors.nii.gz'),
                ten_img.get_fdata().squeeze(), resliced_affine)
 
