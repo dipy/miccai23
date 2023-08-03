@@ -1,3 +1,4 @@
+import csv
 import os
 from os.path import join as pjoin
 from pathlib import Path
@@ -254,10 +255,13 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     print(f"Shape Similarity score : {icc_ss.round(3)}")
 
     # Save results
-    res = np.asarray([icc_con, icc_mm, icc_ss])
-    header = 'betweenness_centrality, global_efficiency, modularity'
-    np.savetxt(pjoin(destination, '_final_sore.csv'), res, delimiter=',',
-               header=header)
+    with open(pjoin(destination, '_final_sore.csv'), 'w') as fh:
+        writer = csv.writer(fh, delimiter=',')
+        writer.writerow(['betweenness_centrality', 'global_efficiency',
+                         'modularity'])
+        writer.writerow([float(icc_con.round(3)),
+                         float(icc_mm.round(3)),
+                         float(icc_ss.round(3))])
 
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
