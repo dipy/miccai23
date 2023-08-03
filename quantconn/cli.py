@@ -209,7 +209,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
             if not os.path.exists(connectivity_matrice_path):
                 print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
                 continue
-            conn_mat = np.load(connectivity_matrice_path)
+            conn_mat = np.load(connectivity_matrice_path, allow_pickle=True)
             for i, mt in enumerate(['betweenness_centrality',
                                     'global_efficiency', 'modularity']):
                 df_conn_2 = pd.DataFrame({'# subject': [sub],
