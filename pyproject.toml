@@ -28,6 +28,8 @@ dependencies = [
   "matplotlib",
   "HD-BET@git+https://github.com/MIC-DKFZ/HD-BET.git",
   "networkx",
+  "pingouin==0.5.3",
+  "pandas==1.5.2"
   ]
 dynamic = ["version"]
 

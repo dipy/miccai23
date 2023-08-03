@@ -7,6 +7,9 @@ from typing_extensions import Annotated
 import typer
 from rich import print
 import numpy as np
+from dipy import __version__ as dipy_version
+import pandas as pd
+import pingouin as pg
 
 from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
                                 fetch_icbm_2009a_nonlinear_asym,
@@ -20,7 +23,8 @@ from quantconn.utils import print_input_info, get_valid_subjects
 
 app = typer.Typer(help="MICCAI 23 Challenge Tools for Quantitative"
                   "Connectivity through Harmonized Preprocessing of"
-                  "Diffusion competition")
+                  "Diffusion competition. Powered by DIPY "
+                  "%s"%dipy_version)
 
 
 @app.command()
@@ -51,6 +55,7 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
     """Process your harmonized data."""
     # add meesage powered by DIPY
 
+    print(f"[bold blue]Powered by DIPY {dipy_version}[/bold blue]")
     print_input_info(db_path, destination)
     subjects = get_valid_subjects(db_path, subject)
 
@@ -107,6 +112,7 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
              fail_fast: Annotated[bool, typer.Option("--fail_fast", "-ff",)] = False,):
     """Evaluate your results."""
     # add message powered by DIPY and version
+    print(f"[bold blue]Powered by DIPY {dipy_version}[/bold blue]")
     typer.echo("Evaluating your results")
     print_input_info(db_path, destination)
     subjects = get_valid_subjects(db_path, subject)
@@ -156,14 +162,22 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
 @app.command()
 def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                                                     prompt="Please enter output path",
-                                                    exists=True, file_okay=False,)]):
+                                                    exists=True, file_okay=False,)],
+          subject: Annotated[Optional[List[str]],
+                             typer.Option("--subject", "-sbj",)] = None,):
     """Merge evaluation results."""
+    print(f"[bold blue]Powered by DIPY {dipy_version}[/bold blue]")
     print("[blue] Merging results [/blue]")
     print_input_info(destination=destination)
-    subjects = get_valid_subjects(destination)
+    subjects = get_valid_subjects(destination, subject)
     _merging_results_path = pjoin(destination, "_merged_results.csv")
     _merging_results = []
     # TODO: Check all paths if they exists. If not, skip subject
+    if len(subjects) < 1:
+        print(":warning: [bold yellow]Not enough subjects to merge[/bold yellow]")
+        raise typer.Exit(code=1)
+
+    df_conn = pd.DataFrame(columns=['# subject', 'metric', 'score'])
     for sub in subjects:
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):
@@ -190,8 +204,60 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
         _merging_results.append(subject_scores)
 
+        for con in ['A', 'B']:
+            connectivity_matrice_path = pjoin(output_path, f'conn_matrice_score_{con}.npy')
+            if not os.path.exists(connectivity_matrice_path):
+                print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
+                continue
+            conn_mat = np.load(connectivity_matrice_path)
+            for i, mt in enumerate(['betweenness_centrality',
+                                    'global_efficiency', 'modularity']):
+                df_conn_2 = pd.DataFrame({'# subject': [sub],
+                                          'metric': [f'{mt}_{con}'],
+                                          'score': [conn_mat[i+1]]})
+                df_conn = pd.concat([df_conn, df_conn_2])
+
     np.savetxt(_merging_results_path, np.asarray(_merging_results),
                delimiter=',', header=','.join(headers), fmt='%s')
+
+    results_conn = pg.intraclass_corr(data=df_conn, targets='# subject',
+                                      raters='metric', ratings='score')
+    results_conn = results_conn.set_index('Description')
+    icc_con = results_conn.loc['Average raters absolute', 'ICC']
+    print(f"Connectivity score : {icc_con.round(3)}")
+
+    data = pd.read_csv(_merging_results_path)
+    df_mm = pd.DataFrame(columns=['# subject', 'metric', 'score'])
+    df_ss = pd.DataFrame(columns=['# subject', 'metric', 'score'])
+    for i in range(len(data)):
+        for mt in headers[3:]:
+            df_mm_2 = pd.DataFrame({'# subject': [data['# subject'][i]],
+                                    'metric': [mt],
+                                    'score': [data[mt][i]]})
+            df_mm = pd.concat([df_mm, df_mm_2])
+        for mt in headers[1:3]:
+            df_ss_2 = pd.DataFrame({'# subject': [data['# subject'][i]],
+                                    'metric': [mt],
+                                    'score': [data[mt][i]]})
+            df_ss = pd.concat([df_ss, df_ss_2])
+
+    results_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
+                                    raters='metric', ratings='score')
+    results_mm = results_mm.set_index('Description')
+    icc_mm = results_mm.loc['Average raters absolute', 'ICC']
+    print(f"Microstructural measures score : {icc_mm.round(3)}")
+
+    results_ss = pg.intraclass_corr(data=df_ss, targets='# subject',
+                                    raters='metric', ratings='score')
+    results_ss = results_ss.set_index('Description')
+    icc_ss = results_ss.loc['Average raters absolute', 'ICC']
+    print(f"Shape Similarity score : {icc_ss.round(3)}")
+
+    # Save results
+    res = np.asarray([icc_con, icc_mm, icc_ss])
+    header = 'betweenness_centrality, global_efficiency, modularity'
+    np.savetxt(pjoin(destination, '_final_sore.csv'), res, delimiter=',',
+               header=header)
 
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 

@@ -146,7 +146,10 @@ def evaluate_matrice(input_path, output_path):
     connectivity_graph = nx.from_numpy_array(connectivity_matrix)
 
     betweenness_centrality = nx.betweenness_centrality(connectivity_graph)
+    node_weights = dict(connectivity_graph.degree())
+    weighted_mean = weighted_mean_centrality(betweenness_centrality, node_weights)
     # print("Betweenness Centrality:", betweenness_centrality)
+    # print("Weighted Mean of Betweenness Centrality:", weighted_mean)
     global_efficiency_value = nx.algorithms.efficiency_measures.global_efficiency(connectivity_graph)
     # print("Global Efficiency:", global_efficiency_value)
     modularity = nx.community.modularity(
@@ -155,6 +158,14 @@ def evaluate_matrice(input_path, output_path):
     # print("Modularity:", modularity)
 
     # Save the results
-    res = np.array([betweenness_centrality, global_efficiency_value,
+    res = np.array([betweenness_centrality, weighted_mean, global_efficiency_value,
                     modularity])
     np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
+
+
+# Calculate the weighted mean of betweenness centrality
+def weighted_mean_centrality(betweenness_centrality, node_weights):
+    total_weighted_centrality = sum(betweenness_centrality[node] * weight for node, weight in node_weights.items())
+    total_weight = sum(node_weights.values())
+    weighted_mean = total_weighted_centrality / total_weight
+    return weighted_mean
