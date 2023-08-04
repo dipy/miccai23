@@ -171,14 +171,17 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     print("[blue] Merging results [/blue]")
     print_input_info(destination=destination)
     subjects = get_valid_subjects(destination, subject)
-    _merging_results_path = pjoin(destination, "_merged_results.csv")
+    _merging_results_path = pjoin(destination, "_microstructural_measures_merged_results.csv")
     _merging_results = []
     # TODO: Check all paths if they exists. If not, skip subject
     if len(subjects) < 1:
         print(":warning: [bold yellow]Not enough subjects to merge[/bold yellow]")
         raise typer.Exit(code=1)
 
-    df_conn = pd.DataFrame(columns=['# subject', 'metric', 'score'])
+    build_header = True
+    headers = ['subject', 'group',]
+    df_conn = pd.DataFrame(columns=['# subject', 'group', 'metric', 'score'])
+    df_ss = pd.DataFrame(columns=['# subject', 'metric', 'score'])
     for sub in subjects:
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):
@@ -186,27 +189,24 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
             continue
         print(f"[bold blue]Merging [green]{sub}[/green] subject [/bold blue]")
 
-        subject_scores = [sub]
-        headers = ['subject', 'shape_similarity_score', 'shape_profile']
+        for group in ['A', 'B']:
+            subject_scores = [sub, group]
+            for bundle_name in ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']:
+                for metric in ['ad', 'fa', 'ga', 'md', 'rd']:
+                    metric_path = pjoin(output_path, f"{bundle_name}_{metric}_{group}_buan_mean_profile.npy")
+                    # metric_path_b = pjoin(output_path, f"{bundle_name}_{metric}_B_buan_mean_profile.npy")
 
-        score = np.load(pjoin(output_path, 'shape_similarity_score.npy'))
-        shape_profile = np.nanmean(np.load(pjoin(output_path, 'shape_profile.npy')))
+                    # val = np.nanmean(np.load(metric_path_a) - np.load(metric_path_b))
+                    # subject_scores.append(float(np.abs(val)))
+                    val = np.nanmean(np.load(metric_path))
+                    subject_scores.append(float(np.abs(val)))
+                    if build_header:
+                        headers.append(f"{bundle_name}_{metric}")
 
-        subject_scores.append(score)
-        subject_scores.append(shape_profile)
-        for bundle_name in ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']:
-            for metric in ['ad', 'fa', 'ga', 'md', 'rd']:
-                metric_path_a = pjoin(output_path, f"{bundle_name}_{metric}_A_buan_mean_profile.npy")
-                metric_path_b = pjoin(output_path, f"{bundle_name}_{metric}_B_buan_mean_profile.npy")
+            build_header = False
+            _merging_results.append(subject_scores)
 
-                val = np.nanmean(np.load(metric_path_a) - np.load(metric_path_b))
-                subject_scores.append(float(np.abs(val)))
-                headers.append(f"{bundle_name}_{metric}_mean")
-
-        _merging_results.append(subject_scores)
-
-        for con in ['A', 'B']:
-            connectivity_matrice_path = pjoin(output_path, f'conn_matrice_score_{con}.npy')
+            connectivity_matrice_path = pjoin(output_path, f'conn_matrice_score_{group}.npy')
             if not os.path.exists(connectivity_matrice_path):
                 print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
                 continue
@@ -214,11 +214,20 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
             for i, mt in enumerate(['betweenness_centrality',
                                     'global_efficiency', 'modularity']):
                 df_conn_2 = pd.DataFrame({'# subject': [sub],
-                                          'metric': [f'{mt}_{con}'],
+                                          'group': [group],
+                                          'metric': [f'{mt}'],
                                           'score': [conn_mat[i+1]]})
                 df_conn = pd.concat([df_conn, df_conn_2])
 
-    df_conn.to_csv(pjoin(destination, '_connectome_summary.csv'))
+        score = np.load(pjoin(output_path, 'shape_similarity_score.npy'))
+        shape_profile = np.nanmean(np.load(pjoin(output_path, 'shape_profile.npy')))
+        df_ss_2 = pd.DataFrame({'# subject': [sub, sub],
+                                'metric': ['shape_similarity', 'shape_profile'],
+                                'score': [score, shape_profile]})
+        df_ss = pd.concat([df_ss, df_ss_2])
+
+    df_conn.to_csv(pjoin(destination, '_connectome_merged_results.csv'))
+    df_ss.to_csv(pjoin(destination, '_shape_similarity_merged_results.csv'))
     np.savetxt(_merging_results_path, np.asarray(_merging_results),
                delimiter=',', header=','.join(headers), fmt='%s')
 
@@ -230,21 +239,16 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
     data = pd.read_csv(_merging_results_path)
     df_mm = pd.DataFrame(columns=['# subject', 'metric', 'score'])
-    df_ss = pd.DataFrame(columns=['# subject', 'metric', 'score'])
+
     for i in range(len(data)):
         for mt in headers[3:]:
             df_mm_2 = pd.DataFrame({'# subject': [data['# subject'][i]],
+                                    'group': [data['group'][i]],
                                     'metric': [mt],
                                     'score': [data[mt][i]]})
             df_mm = pd.concat([df_mm, df_mm_2])
-        for mt in headers[1:3]:
-            df_ss_2 = pd.DataFrame({'# subject': [data['# subject'][i]],
-                                    'metric': [mt],
-                                    'score': [data[mt][i]]})
-            df_ss = pd.concat([df_ss, df_ss_2])
 
     df_mm.to_csv(pjoin(destination, '_microstructural_measures_scores.csv'))
-    df_ss.to_csv(pjoin(destination, '_shape_similarity_scores.csv'))
 
     results_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
                                     raters='metric', ratings='score')
@@ -262,7 +266,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     with open(pjoin(destination, '_final_sore.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
         writer.writerow(['Connectivity score', 'Microstructural measures',
-                         'Shape Similarity'])
+                         'Shape Similarity Score'])
         writer.writerow([float(icc_con.round(3)),
                          float(icc_mm.round(3)),
                          float(icc_ss.round(3))])

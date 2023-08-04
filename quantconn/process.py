@@ -44,9 +44,12 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
 
     print(':left_arrow_curving_right: Sampling/reslicing data')
     vox_sz = dwi_img.header.get_zooms()[:3]
+    # TODO: Voxel size depends on A and B case
+    # new_vox_size = [1.9, 1.9, 1.9]  for B case
     new_vox_size = [2.2, 2.2, 2.2]
+    # TODO: Check reslice order. Try with 2 and compare data (trilinear vs cubic)
     resliced_data, resliced_affine = reslice(dwi_data, dwi_affine, vox_sz,
-                                             new_vox_size)
+                                             new_vox_size, order=1)
 
     save_nifti(pjoin(output_path, 'resliced_data.nii.gz'),
                resliced_data, resliced_affine)
