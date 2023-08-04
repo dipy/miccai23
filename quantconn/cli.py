@@ -87,7 +87,8 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                              pjoin(data_folder, "dwi.bval"),
                              pjoin(data_folder, "dwi.bvec"),
                              t1_path, output_path,
-                             t1_labels_fname=t1_label_path)
+                             t1_labels_fname=t1_label_path,
+                             group=mod)
                 print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
             except Exception as e:
                 print(f":boom: [bold red]Error while processing {sub} case {mod}[/bold red]")

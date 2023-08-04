@@ -37,16 +37,17 @@ from quantconn.download import get_30_bundles_atlas_hcp842
 
 
 def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
-                 t1_labels_fname=None):
+                 t1_labels_fname=None, group='B'):
     dwi_data, dwi_affine, dwi_img = load_nifti(nifti_fname, return_img=True)
     dwi_bvals, dwi_bvecs = read_bvals_bvecs(bval_fname, bvec_fname)
     gtab = gradient_table(dwi_bvals, dwi_bvecs)
 
     print(':left_arrow_curving_right: Sampling/reslicing data')
     vox_sz = dwi_img.header.get_zooms()[:3]
-    # TODO: Voxel size depends on A and B case
-    # new_vox_size = [1.9, 1.9, 1.9]  for B case
+    # Voxel size depends on A and B case
     new_vox_size = [2.2, 2.2, 2.2]
+    if group.lower() == 'b':
+        new_vox_size = [1.9, 1.9, 1.9]
     # TODO: Check reslice order. Try with 2 and compare data (trilinear vs cubic)
     resliced_data, resliced_affine = reslice(dwi_data, dwi_affine, vox_sz,
                                              new_vox_size, order=1)
@@ -69,10 +70,13 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     tensor_vals = lower_triangular(tenfit.quadratic_form)
     ten_img = nifti1_symmat(tensor_vals, affine=resliced_affine)
 
-    # TODO: flipping -> xx xy xz yy yz zz -> xx xy yy xz yx zz
-    # new_D = permute(D,[1 2 4 3 5 6])
+    # Flipping -> xx xy xz yy yz zz -> xx xy yy xz yx zz
     save_nifti(pjoin(output_path, 'tensors.nii.gz'),
                ten_img.get_fdata().squeeze(), resliced_affine)
+    fsl_order = [0, 1, 3, 2, 4, 5]
+    save_nifti(pjoin(output_path, 'tensors_fsl.nii.gz'),
+               ten_img.get_fdata()[..., fsl_order].squeeze(),
+               resliced_affine)
 
     save_nifti(pjoin(output_path, 'fa.nii.gz'), FA.astype(np.float32),
                resliced_affine)
