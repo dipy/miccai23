@@ -18,7 +18,7 @@ from quantconn.download import (fetch_hcp_mmp_1_0_atlas,
                                 get_30_bundles_atlas_hcp842)
 from quantconn.evaluate import evaluate_data, evaluate_matrice
 from quantconn.process import process_data
-from quantconn.viz import show_data
+# from quantconn.viz import show_data
 from quantconn.utils import print_input_info, get_valid_subjects
 
 
@@ -275,13 +275,13 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
 
-@app.command()
-def visualize():
-    """Visualize a data."""
-    print("Visualizing data")
-    print(f":boom: [bold red]Not implemented yet[/bold red]")
-    # show_data()
-    raise typer.Exit(code=1)
+# @app.command()
+# def visualize():
+#     """Visualize a data."""
+#     print("Visualizing data")
+#     print(f":boom: [bold red]Not implemented yet[/bold red]")
+#     # show_data()
+#     raise typer.Exit(code=1)
 
 
 # /Users/skoudoro/.miccai23_home/TestSubmission_1
