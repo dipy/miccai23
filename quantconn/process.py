@@ -108,7 +108,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     # get white matter mask
 
     # temporary solution
-    white_matter = FA > 0.3
+    white_matter = FA > 0.1
     print(':left_arrow_curving_right: Reconstruction using CSA Model')
     csa_model = CsaOdfModel(gtab, sh_order=6)
     csa_peaks = peaks_from_model(csa_model, maskdata, default_sphere,
@@ -117,10 +117,10 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
                                  mask=white_matter)
 
     print(':left_arrow_curving_right: Whole Brain Tractography')
-    stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .25)
+    stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .15)
 
     seeds = utils.seeds_from_mask(white_matter, resliced_affine,
-                                  density=[2, 2, 2])
+                                  density=[3, 3, 3])
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=resliced_affine, step_size=.5)
