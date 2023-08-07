@@ -184,7 +184,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
         # for reduction_thr, pruning_thr in attempts:
         recognized_bundle, model_labels = rb.recognize(
             model_bundle=model_bundle.streamlines, model_clust_thr=0.1,
-            reduction_thr=20, pruning_thr=10,
+            reduction_thr=18, pruning_thr=8,
             reduction_distance='mdf', pruning_distance='mdf', slr=True)
 
             # if len(recognized_bundle):
