@@ -27,6 +27,7 @@ from dipy.tracking.stopping_criterion import ThresholdStoppingCriterion
 from dipy.tracking import utils
 from dipy.io.stateful_tractogram import Space, StatefulTractogram
 from dipy.io.streamline import save_trk, load_trk
+from dipy.tracking.metrics import length
 from dipy.tracking.local_tracking import LocalTracking
 from dipy.tracking.streamline import Streamlines, transform_streamlines
 from dipy.segment.mask import median_otsu
@@ -127,11 +128,11 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
 
     # remove short streamlines
     print(':left_arrow_curving_right: Remove short streamlines (< 30mm)')
-    from dipy.tracking.metrics import length
     streamlines_generator = (s for s in streamlines_generator
                              if length(s) > 30.0)
     target_streamlines = Streamlines(streamlines_generator)
 
+    print(':left_arrow_curving_right: Saving tractogram')
     header = create_tractogram_header(TrkFile, resliced_affine,
                                       maskdata.shape[:3],
                                       new_vox_size,

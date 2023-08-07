@@ -60,7 +60,8 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
     print_input_info(db_path, destination)
     subjects = get_valid_subjects(db_path, subject)
 
-    for sub in subjects:
+    total_subjects = len(subjects)
+    for nb_sub, sub in enumerate(subjects, start=1):
         t1_path = pjoin(db_path, sub, "anat", f"{sub}_T1w.nii.gz")
         # t1_label_path = pjoin(db_path, sub, "anat", "aparc+aseg.nii.gz")
         t1_label_path = pjoin(db_path, sub, "anat", "atlas_freesurfer_inT1space.nii.gz")
@@ -82,7 +83,7 @@ def process(db_path: Annotated[Path, typer.Option("--db-path", "-db",
                 os.makedirs(output_path)
 
             try:
-                print(f"[bold blue]Processing [green]{sub} / {mod}[/green] acquisition [/bold blue]")
+                print(f"[bold blue] ({nb_sub}/{total_subjects}) Processing [green]{sub} / {mod}[/green] acquisition [/bold blue]")
                 process_data(pjoin(data_folder, "dwi.nii.gz"),
                              pjoin(data_folder, "dwi.bval"),
                              pjoin(data_folder, "dwi.bvec"),
@@ -121,9 +122,11 @@ def evaluate(db_path: Annotated[Path, typer.Option("--db-path", "-db",
 
     _, all_bundles_files = get_30_bundles_atlas_hcp842()
 
-    for sub in subjects:
+    total_subjects = len(subjects)
+
+    for nb_sub, sub in enumerate(subjects, start=1):
         # t1_path = pjoin(db_path, "anat", f"{sub}_T1w.nii.gz")
-        print(f"[bold blue]Evaluating [green]{sub}[/green] subject [/bold blue]")
+        print(f"[bold blue]({nb_sub}/{total_subjects}) Evaluating [green]{sub}[/green] subject [/bold blue]")
         selected_bundles = ['AF_R', 'AF_L', 'CST_L', 'CST_R', 'OR_L', 'OR_R']
         output_path = pjoin(destination, sub, 'metrics')
         if not os.path.exists(output_path):
@@ -232,45 +235,53 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
     np.savetxt(_merging_results_path, np.asarray(_merging_results),
                delimiter=',', header=','.join(headers), fmt='%s')
 
-    results_conn = pg.intraclass_corr(data=df_conn, targets='# subject',
-                                      raters='metric', ratings='score')
-    results_conn = results_conn.set_index('Description')
-    icc_con = results_conn.loc['Average raters absolute', 'ICC']
-    print(f"Connectivity score : {icc_con.round(3)}")
+    # Start Computing ICC
+    results_conn = []
+    for metric in ['betweenness_centrality', 'global_efficiency',
+                   'modularity']:
+        df_tmp = df_conn[df_conn['metric'] == metric]
+        icc_conn = pg.intraclass_corr(data=df_tmp, targets='# subject',
+                                      raters='group', ratings='score')
+        icc_conn.set_index('Type')
+        results_conn.append(float(icc_conn.loc[icc_conn['Type'] == 'ICC1',
+                                               'ICC']))
 
-    data = pd.read_csv(_merging_results_path)
-    df_mm = pd.DataFrame(columns=['# subject', 'metric', 'score'])
+    print(f"Connectivity all scores : {results_conn}")
+    print(f"Connectivity final score : {np.asarray(results_conn).mean()}")
 
-    for i in range(len(data)):
-        for mt in headers[3:]:
-            df_mm_2 = pd.DataFrame({'# subject': [data['# subject'][i]],
-                                    'group': [data['group'][i]],
-                                    'metric': [mt],
-                                    'score': [data[mt][i]]})
-            df_mm = pd.concat([df_mm, df_mm_2])
+    df_mm = pd.read_csv(_merging_results_path)
+    results_mm = []
+    for bundle_metric in headers[2:]:
+        icc_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
+                                    raters='group', ratings=bundle_metric)
 
-    df_mm.to_csv(pjoin(destination, '_microstructural_measures_scores.csv'))
+        icc_mm.set_index('Type')
 
-    results_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
-                                    raters='metric', ratings='score')
-    results_mm = results_mm.set_index('Description')
-    icc_mm = results_mm.loc['Average raters absolute', 'ICC']
-    print(f"Microstructural measures score : {icc_mm.round(3)}")
+        results_mm.append(float(icc_mm.loc[icc_mm['Type'] == 'ICC1', 'ICC']))
 
-    results_ss = pg.intraclass_corr(data=df_ss, targets='# subject',
-                                    raters='metric', ratings='score')
-    results_ss = results_ss.set_index('Description')
-    icc_ss = results_ss.loc['Average raters absolute', 'ICC']
-    print(f"Shape Similarity score : {icc_ss.round(3)}")
+    with open(pjoin(destination, '_bundle_metrics_icc_report.csv'), 'w') as fh:
+        writer = csv.writer(fh, delimiter=',')
+        writer.writerow(headers[2:])
+        writer.writerow(results_mm)
+    print(f"Microstructural measures all scores : {results_mm}")
+    print(f"Microstructural measures final score : {np.asarray(results_mm).mean()}")
+
+    results_ss = []
+    for metric in ['shape_similarity', 'shape_profile']:
+        df_tmp = df_ss[df_ss['metric'] == metric]
+        results_ss.append(df_tmp.score.mean())
+
+    print(f"Shape Similarity all scores : {results_ss}")
+    print(f"Shape Similarity final score : {np.asarray(results_ss).mean()}")
 
     # Save results
     with open(pjoin(destination, '_final_sore.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
         writer.writerow(['Connectivity score', 'Microstructural measures',
                          'Shape Similarity Score'])
-        writer.writerow([float(icc_con.round(3)),
-                         float(icc_mm.round(3)),
-                         float(icc_ss.round(3))])
+        writer.writerow([float(np.asarray(results_conn).mean()),
+                         float(np.asarray(results_mm).mean()),
+                         float(np.asarray(results_ss).mean())])
 
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
