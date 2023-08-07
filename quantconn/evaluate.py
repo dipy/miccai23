@@ -105,8 +105,8 @@ def create_buan_profiles(bundle_native, bundle_atlas, model_bundle,
         values = map_coordinates(metric, transformed_org_bundle._data.T,
                                  order=1)
 
-        buan_mean_profile = np.zeros(n)
-        buan_stdv = np.zeros(n)
+        buan_mean_profile = np.ones(n) * np.nan
+        buan_stdv = np.ones(n) * np.nan
 
         photometric_name = os.path.split(file_name)
         metric_name = photometric_name[1].replace('.nii.gz', '')
@@ -133,8 +133,8 @@ def save_empty_bundle_profiles(bundle_name, metric_folder, out_dir, stype=None):
 
         n = 100  # number of segments along the length of the bundle
 
-        buan_mean_profile = np.zeros(n)
-        buan_stdv = np.zeros(n)
+        buan_mean_profile = np.ones(n) * np.nan
+        buan_stdv = np.ones(n) * np.nan
 
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_mean_profile.npy"), buan_mean_profile)
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_profile_stdv.npy"), buan_stdv)
