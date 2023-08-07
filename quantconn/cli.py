@@ -248,6 +248,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
     print(f"Connectivity all scores : {results_conn}")
     print(f"Connectivity final score : {np.asarray(results_conn).mean()}")
+    print(f"Connectivity std : {np.asarray(results_conn).std()}")
 
     df_mm = pd.read_csv(_merging_results_path)
     results_mm = []
@@ -265,6 +266,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         writer.writerow(results_mm)
     print(f"Microstructural measures all scores : {results_mm}")
     print(f"Microstructural measures final score : {np.asarray(results_mm).mean()}")
+    print(f"Microstructural measures std : {np.asarray(results_mm).std()}")
 
     results_ss = []
     for metric in ['shape_similarity', 'shape_profile']:
@@ -272,16 +274,18 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         results_ss.append(df_tmp.score.mean())
 
     print(f"Shape Similarity all scores : {results_ss}")
-    print(f"Shape Similarity final score : {np.asarray(results_ss).mean()}")
+    print(f"Shape Similarity final score : {results_ss[0]}")
+    print(f"Shape Profile Final score  : {results_ss[1]}")
 
     # Save results
     with open(pjoin(destination, '_final_sore.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
         writer.writerow(['Connectivity score', 'Microstructural measures',
-                         'Shape Similarity Score'])
+                         'Shape Similarity Score', 'Shape Profile Score'])
         writer.writerow([float(np.asarray(results_conn).mean()),
                          float(np.asarray(results_mm).mean()),
-                         float(np.asarray(results_ss).mean())])
+                         float(np.asarray(results_ss[0])),
+                         float(results_ss[1])])
 
     print(":green_circle: [bold green]Success ! :love-you_gesture: [/bold green]")
 
