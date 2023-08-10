@@ -121,7 +121,7 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     stopping_criterion = ThresholdStoppingCriterion(csa_peaks.gfa, .15)
 
     seeds = utils.seeds_from_mask(white_matter, resliced_affine,
-                                  density=[3, 3, 3])
+                                  density=[2, 2, 2])
 
     streamlines_generator = LocalTracking(csa_peaks, stopping_criterion, seeds,
                                           affine=resliced_affine, step_size=.5)
@@ -214,22 +214,26 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
     label_data, label_affine, label_voxsize = load_nifti(t1_labels_fname,
                                                          return_voxsize=True)
 
-    print(':left_arrow_curving_right: Connectivity matrix: T1 skullstripping')
-    use_hd_bet = True
-    t1_skullstrip_fname = pjoin(
-            output_path,
-            os.path.basename(t1_fname).replace('.nii.gz', 'skullstrip.nii.gz')
-    )
-    if use_hd_bet:
-        run_hd_bet(t1_fname, t1_skullstrip_fname, mode='fast', device='cpu',
-                   do_tta=False)
-    else:
-        from dipy.nn.evac import EVACPlus
-        evac = EVACPlus()
-        mask_volume = evac.predict(t1_data, t1_affine,
-                                   t1_img.header.get_zooms()[:3])
-        masked_volume = mask_volume * t1_data
-        save_nifti(t1_skullstrip_fname, masked_volume, t1_affine)
+    t1_skullstrip_fname = pjoin(os.path.dirname(__file__), 'data', 'brains',
+                                os.path.basename(t1_fname))
+
+    if not os.path.isfile(t1_skullstrip_fname):
+        print(':left_arrow_curving_right: Connectivity matrix: T1 skullstripping')
+        use_hd_bet = True
+        t1_skullstrip_fname = pjoin(
+                output_path,
+                os.path.basename(t1_fname).replace('.nii.gz', 'skullstrip.nii.gz')
+        )
+        if use_hd_bet:
+            run_hd_bet(t1_fname, t1_skullstrip_fname, mode='fast',
+                       device='cpu', do_tta=False)
+        else:
+            from dipy.nn.evac import EVACPlus
+            evac = EVACPlus()
+            mask_volume = evac.predict(t1_data, t1_affine,
+                                       t1_img.header.get_zooms()[:3])
+            masked_volume = mask_volume * t1_data
+            save_nifti(t1_skullstrip_fname, masked_volume, t1_affine)
 
     t1_noskull_data, t1_noskull_affine, t1_noskull_img = \
         load_nifti(t1_skullstrip_fname, return_img=True)
