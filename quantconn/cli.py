@@ -243,7 +243,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         icc_conn = pg.intraclass_corr(data=df_tmp, targets='# subject',
                                       raters='group', ratings='score')
         icc_conn.set_index('Type')
-        results_conn.append(float(icc_conn.loc[icc_conn['Type'] == 'ICC1',
+        results_conn.append(float(icc_conn.loc[icc_conn['Type'] == 'ICC3',
                                                'ICC']))
 
     print(f"Connectivity all scores : {results_conn}")
@@ -258,7 +258,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
         icc_mm.set_index('Type')
 
-        results_mm.append(float(icc_mm.loc[icc_mm['Type'] == 'ICC1', 'ICC']))
+        results_mm.append(float(icc_mm.loc[icc_mm['Type'] == 'ICC3', 'ICC']))
 
     with open(pjoin(destination, '_bundle_metrics_icc_report.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
