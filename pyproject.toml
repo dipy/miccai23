@@ -27,7 +27,6 @@ dependencies = [
   "bs4",
   "matplotlib",
   "HD-BET@git+https://github.com/MIC-DKFZ/HD-BET.git",
-  "networkx",
   "pingouin==0.5.3",
   "pandas==1.5.2",
   "bctpy==0.6.1",
