@@ -184,6 +184,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
     build_header = True
     headers = ['subject', 'group',]
+    conn_mat_header = []
     df_conn = pd.DataFrame(columns=['# subject', 'group', 'metric', 'score'])
     df_ss = pd.DataFrame(columns=['# subject', 'metric', 'score'])
     for sub in subjects:
@@ -215,12 +216,13 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                 print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
                 continue
             conn_mat = np.load(connectivity_matrice_path, allow_pickle=True)
-            for i, mt in enumerate(['betweenness_centrality',
-                                    'global_efficiency', 'modularity']):
+            if not conn_mat_header:
+                conn_mat_header = list(conn_mat.keys())
+            for metric, value in conn_mat.items():
                 df_conn_2 = pd.DataFrame({'# subject': [sub],
                                           'group': [group],
-                                          'metric': [f'{mt}'],
-                                          'score': [conn_mat[i+1]]})
+                                          'metric': [f'{metric}'],
+                                          'score': [value]})
                 df_conn = pd.concat([df_conn, df_conn_2])
 
         score = np.load(pjoin(output_path, 'shape_similarity_score.npy'))
@@ -237,8 +239,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
     # Start Computing ICC
     results_conn = []
-    for metric in ['betweenness_centrality', 'global_efficiency',
-                   'modularity']:
+    for metric in conn_mat_header:
         df_tmp = df_conn[df_conn['metric'] == metric]
         icc_conn = pg.intraclass_corr(data=df_tmp, targets='# subject',
                                       raters='group', ratings='score')
@@ -248,7 +249,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
 
     print(f"Connectivity all scores : {results_conn}")
     print(f"Connectivity final score : {np.asarray(results_conn).mean()}")
-    print(f"Connectivity std : {np.asarray(results_conn).std()}")
+    # print(f"Connectivity std : {np.asarray(results_conn).std()}")
 
     df_mm = pd.read_csv(_merging_results_path)
     results_mm = []
@@ -266,7 +267,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         writer.writerow(results_mm)
     print(f"Microstructural measures all scores : {results_mm}")
     print(f"Microstructural measures final score : {np.asarray(results_mm).mean()}")
-    print(f"Microstructural measures std : {np.asarray(results_mm).std()}")
+    # print(f"Microstructural measures std : {np.asarray(results_mm).std()}")
 
     results_ss = []
     for metric in ['shape_similarity', 'shape_profile']:
