@@ -6,6 +6,7 @@ from os.path import join as pjoin
 from rich import print
 from scipy.ndimage import map_coordinates
 import networkx as nx
+import bct
 
 from dipy.segment.bundles import bundle_shape_similarity
 from dipy.align.streamwarp import (bundlewarp, bundlewarp_shape_analysis)
@@ -140,27 +141,51 @@ def save_empty_bundle_profiles(bundle_name, metric_folder, out_dir, stype=None):
         np.save(pjoin(out_dir, f"{bundle_name}_{metric_name}_{stype}_buan_profile_stdv.npy"), buan_stdv)
 
 
-def evaluate_matrice(input_path, output_path):
+def evaluate_matrice(input_path, output_path, use_networkx=False):
     # Load the matrice
     connectivity_matrix = np.load(pjoin(input_path, 'connectivity_matrice.npy'))
+
+    if use_networkx:
+        res = evaluate_matrice_networkx(connectivity_matrix)
+    else:
+        res = evaluate_matrice_bctpy(connectivity_matrix)
+
+    np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
+
+
+def evaluate_matrice_bctpy(connectivity_matrix):
+    N = connectivity_matrix.shape[0]
+    betweenness_centrality_array = bct.betweenness_wei(connectivity_matrix) / ((N-1)*(N-2))
+    betweenness_centrality = float(np.average(betweenness_centrality_array))
+
+    ci, modularity = bct.modularity_louvain_und(connectivity_matrix, seed=0)
+
+    global_efficiency_array = bct.efficiency_wei(connectivity_matrix)
+    global_efficiency = float(np.average(global_efficiency_array))
+
+    res = np.array([betweenness_centrality, global_efficiency, modularity])
+    return res
+
+
+def evaluate_matrice_networkx(connectivity_matrix):
     connectivity_graph = nx.from_numpy_array(connectivity_matrix)
 
-    betweenness_centrality = nx.betweenness_centrality(connectivity_graph)
+    betweenness_centrality_array = nx.betweenness_centrality(connectivity_graph)
     node_weights = dict(connectivity_graph.degree())
-    weighted_mean = weighted_mean_centrality(betweenness_centrality, node_weights)
+    betweenness_centrality = weighted_mean_centrality(
+        betweenness_centrality_array, node_weights)
     # print("Betweenness Centrality:", betweenness_centrality)
     # print("Weighted Mean of Betweenness Centrality:", weighted_mean)
-    global_efficiency_value = nx.algorithms.efficiency_measures.global_efficiency(connectivity_graph)
+    global_efficiency = nx.algorithms.efficiency_measures.global_efficiency(connectivity_graph)
     # print("Global Efficiency:", global_efficiency_value)
     modularity = nx.community.modularity(
         connectivity_graph,
         nx.community.label_propagation_communities(connectivity_graph))
     # print("Modularity:", modularity)
 
-    # Save the results
-    res = np.array([betweenness_centrality, weighted_mean, global_efficiency_value,
+    res = np.array([betweenness_centrality, global_efficiency,
                     modularity])
-    np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
+    return res
 
 
 # Calculate the weighted mean of betweenness centrality
