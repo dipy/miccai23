@@ -216,6 +216,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                 print(f":yellow_circle: Missing data for subject {sub} in {output_path} folder.")
                 continue
             conn_mat = np.load(connectivity_matrice_path, allow_pickle=True)
+            conn_mat = conn_mat.item()
             if not conn_mat_header:
                 conn_mat_header = list(conn_mat.keys())
             for metric, value in conn_mat.items():
