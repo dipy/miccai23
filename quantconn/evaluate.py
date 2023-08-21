@@ -142,8 +142,15 @@ def save_empty_bundle_profiles(bundle_name, metric_folder, out_dir, stype=None):
 
 
 def evaluate_matrice(input_path, output_path, use_networkx=False):
+    filepath = pjoin(input_path, 'connectivity_matrice.npy')
+
+    if not os.path.exists(filepath):
+        res = np.ones(3) * np.nan
+        np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
+        return
+
     # Load the matrice
-    connectivity_matrix = np.load(pjoin(input_path, 'connectivity_matrice.npy'))
+    connectivity_matrix = np.load(filepath)
 
     if use_networkx:
         res = evaluate_matrice_networkx(connectivity_matrix)
