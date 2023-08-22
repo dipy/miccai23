@@ -239,35 +239,36 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
                delimiter=',', header=','.join(headers), fmt='%s')
 
     # Start Computing ICC
-    results_conn = []
+    results_conn = {}
     for metric in conn_mat_header:
         df_tmp = df_conn[df_conn['metric'] == metric]
         icc_conn = pg.intraclass_corr(data=df_tmp, targets='# subject',
-                                      raters='group', ratings='score')
+                                      raters='group', ratings='score',
+                                      nan_policy='omit')
         icc_conn.set_index('Type')
-        results_conn.append(float(icc_conn.loc[icc_conn['Type'] == 'ICC3',
-                                               'ICC']))
+        results_conn[metric] = float(icc_conn.loc[icc_conn['Type'] == 'ICC3',
+                                                  'ICC'])
 
     print(f"Connectivity all scores : {results_conn}")
-    print(f"Connectivity final score : {np.asarray(results_conn).mean()}")
+    print(f"Connectivity final score : {np.nanmean(np.asarray(list(results_conn.values())))}")
     # print(f"Connectivity std : {np.asarray(results_conn).std()}")
 
     df_mm = pd.read_csv(_merging_results_path)
-    results_mm = []
+    results_mm = {}
     for bundle_metric in headers[2:]:
         icc_mm = pg.intraclass_corr(data=df_mm, targets='# subject',
                                     raters='group', ratings=bundle_metric)
 
         icc_mm.set_index('Type')
 
-        results_mm.append(float(icc_mm.loc[icc_mm['Type'] == 'ICC3', 'ICC']))
+        results_mm[bundle_metric] = (float(icc_mm.loc[icc_mm['Type'] == 'ICC3', 'ICC']))
 
     with open(pjoin(destination, '_bundle_metrics_icc_report.csv'), 'w') as fh:
         writer = csv.writer(fh, delimiter=',')
         writer.writerow(headers[2:])
-        writer.writerow(results_mm)
+        writer.writerow(list(results_mm.values()))
     print(f"Microstructural measures all scores : {results_mm}")
-    print(f"Microstructural measures final score : {np.asarray(results_mm).mean()}")
+    print(f"Microstructural measures final score : {np.nanmean(np.asarray(list(results_mm.values())))}")
     # print(f"Microstructural measures std : {np.asarray(results_mm).std()}")
 
     results_ss = []
@@ -275,7 +276,7 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         df_tmp = df_ss[df_ss['metric'] == metric]
         results_ss.append(df_tmp.score.mean())
 
-    print(f"Shape Similarity all scores : {results_ss}")
+    print(f"Shape all scores : {results_ss}")
     print(f"Shape Similarity final score : {results_ss[0]}")
     print(f"Shape Profile Final score  : {results_ss[1]}")
 
@@ -284,8 +285,8 @@ def merge(destination: Annotated[Path, typer.Option("--destination", "-dest",
         writer = csv.writer(fh, delimiter=',')
         writer.writerow(['Connectivity score', 'Microstructural measures',
                          'Shape Similarity Score', 'Shape Profile Score'])
-        writer.writerow([float(np.asarray(results_conn).mean()),
-                         float(np.asarray(results_mm).mean()),
+        writer.writerow([float(np.nanmean(np.asarray(list(results_conn.values())))),
+                         float(np.nanmean(np.asarray(list(results_mm.values())))),
                          float(np.asarray(results_ss[0])),
                          float(results_ss[1])])
 
