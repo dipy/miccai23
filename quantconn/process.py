@@ -326,12 +326,21 @@ def process_data(nifti_fname, bval_fname, bvec_fname, t1_fname, output_path,
 
     print(':left_arrow_curving_right: Connectivity matrix')
     # # Connectivity matrix
-    M = utils.connectivity_matrix(
+    M, grouping = utils.connectivity_matrix(
         target_streamlines_in_t1, t1_noskull_affine,
-        label_data.astype(np.uint8))
+        label_data.astype(np.uint8), return_mapping=True,
+        mapping_as_streamlines=True)
 
-    # Normalize it by dividing by the length of the streamlines
+    len_matrix = np.zeros(M.shape)
+    for idx, slines in grouping.items():
+        if not len(slines):
+            continue
+        i, j = idx
+        current_len = sum([length(s) for s in slines]) / len(slines)
+        len_matrix[i, j] = current_len
+        len_matrix[j, i] = current_len
 
+    np.save(pjoin(output_path, 'connectivity_length_matrice.npy'), len_matrix)
     np.save(pjoin(output_path, 'connectivity_matrice.npy'), M)
     # if interactive:
     #     plt.imshow(np.log1p(M), interpolation='nearest')

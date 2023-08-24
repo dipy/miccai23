@@ -142,37 +142,37 @@ def save_empty_bundle_profiles(bundle_name, metric_folder, out_dir, stype=None):
 
 def evaluate_matrice(input_path, output_path, use_networkx=False):
     filepath = pjoin(input_path, 'connectivity_matrice.npy')
+    cl_filepath = pjoin(input_path, 'connectivity_length_matrice.npy')
 
-    if not os.path.exists(filepath):
-        # res = {'betweenness_centrality': np.nan,
-        #        'local_efficiency': np.nan,
-        #        'global_efficiency': np.nan,
-        #        'nodal_strength': np.nan,
-        #        'clustering': np.nan,
-        #        'modularity': np.nan,
-        #        'participation': np.nan,
-        #        'assortativity': np.nan,
-        #        'density': np.nan}
-        res = {'nodal_strength': np.nan,
+    if not os.path.exists(filepath) or not os.path.exists(cl_filepath):
+        res = {'betweenness_centrality': np.nan,
+               'local_efficiency': np.nan,
+               'global_efficiency': np.nan,
+               'nodal_strength': np.nan,
                'clustering': np.nan,
                'modularity': np.nan,
                'participation': np.nan,
                'assortativity': np.nan,
                'density': np.nan}
+        # res = {'nodal_strength': np.nan,
+        #        'clustering': np.nan,
+        #        'modularity': np.nan,
+        #        'participation': np.nan,
+        #        'assortativity': np.nan,
+        #        'density': np.nan}
         np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
         return
 
     # Load the matrice
     connectivity_matrix = np.load(filepath)
-    # length_matrix = np.load(pjoin(input_path, 'length_matrice.npy'))
+    length_matrix = np.load(cl_filepath)
 
-    # Todo: add this metrics when we get the length matrice
-    # N = connectivity_matrix.shape[0]
-    # betweenness_centrality_array = bct.betweenness_wei(length_matrix) / ((N-1)*(N-2))
-    # betweenness_centrality = float(np.average(betweenness_centrality_array))
-    # local_efficiency_array = bct.efficiency_wei(length_matrix, local=True)
-    # local_efficiency = float(np.average(local_efficiency_array))
-    # global_efficiency = bct.efficiency_wei(length_matrix)
+    N = length_matrix.shape[0]
+    betweenness_centrality_array = bct.betweenness_wei(length_matrix) / ((N-1)*(N-2))
+    betweenness_centrality = float(np.average(betweenness_centrality_array))
+    local_efficiency_array = bct.efficiency_wei(length_matrix, local=True)
+    local_efficiency = float(np.average(local_efficiency_array))
+    global_efficiency = bct.efficiency_wei(length_matrix)
 
     nodal_strength_array = bct.strengths_und(connectivity_matrix)
     nodal_strength = float(np.average(nodal_strength_array))
@@ -184,23 +184,23 @@ def evaluate_matrice(input_path, output_path, use_networkx=False):
     assortativity = bct.assortativity_wei(connectivity_matrix, flag=0)
     density = bct.density_und(connectivity_matrix)[0]
 
-    # res = {'betweenness_centrality': betweenness_centrality,
-    #        'local_efficiency': local_efficiency,
-    #        'global_efficiency': global_efficiency,
-    #        'nodal_strength': nodal_strength,
-    #        'clustering': clustering,
-    #        'modularity': modularity,
-    #        'participation': participation,
-    #        'assortativity': assortativity,
-    #        'density': density
-    #        }
-    res = {'nodal_strength': nodal_strength,
+    res = {'betweenness_centrality': betweenness_centrality,
+           'local_efficiency': local_efficiency,
+           'global_efficiency': global_efficiency,
+           'nodal_strength': nodal_strength,
            'clustering': clustering,
            'modularity': modularity,
            'participation': participation,
            'assortativity': assortativity,
            'density': density
            }
+    # res = {'nodal_strength': nodal_strength,
+    #        'clustering': clustering,
+    #        'modularity': modularity,
+    #        'participation': participation,
+    #        'assortativity': assortativity,
+    #        'density': density
+    #        }
 
     np.save(pjoin(output_path, f"conn_matrice_score_{input_path[-1]}.npy"), res)
 
